@@ -1,5 +1,6 @@
 package com.example.xlsformlab.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,13 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,70 +28,150 @@ import com.example.xlsformlab.core.CapabilityRegistry
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
+
     Scaffold(
+
         topBar = {
             TopAppBar(
-                title = { Text("XLSForm Lab") }
+                title = {
+                    Text("XLSForm Lab Workbench")
+                }
             )
         }
+
     ) { padding ->
+
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+
             items(CapabilityCategory.entries) { category ->
-                CapabilityCategoryCard(category = category)
+
+                CapabilityCategoryCard(category)
+
             }
+
         }
+
     }
+
 }
 
 @Composable
-fun CapabilityCategoryCard(category: CapabilityCategory) {
+private fun CapabilityCategoryCard(
+    category: CapabilityCategory
+) {
+
     val capabilities = CapabilityRegistry.byCategory(category)
 
+    var expanded by remember {
+        mutableStateOf(true)
+    }
+
     ElevatedCard(
+
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 6.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+
+        elevation = CardDefaults.elevatedCardElevation(2.dp)
+
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+
+            Row(
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        expanded = !expanded
+                    }
+
+            ) {
+
                 Text(
-                    text = category.name,
+
+                    text =
+                    if (expanded)
+                        "▼ ${category.name}"
+                    else
+                        "▶ ${category.name}",
+
+                    modifier = Modifier.weight(1f),
+
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+
+                    fontWeight = FontWeight.Bold
+
                 )
+
                 Text(
+
                     text = capabilities.size.toString(),
-                    style = MaterialTheme.typography.labelLarge
+
+                    style = MaterialTheme.typography.titleMedium
+
                 )
+
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            if (expanded) {
 
-            if (capabilities.isEmpty()) {
-                Text(
-                    text = "No capabilities installed",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            } else {
-                capabilities.forEach { capability ->
-                    Text(
-                        text = capability.manifest.name,
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = capability.manifest.description,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Spacer(Modifier.height(12.dp))
+
+                if (capabilities.isEmpty()) {
+
+                    Text("No capabilities installed.")
+
                 }
+
+                capabilities.forEach { capability ->
+
+                    HorizontalDivider()
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+
+                        capability.manifest.name,
+
+                        style = MaterialTheme.typography.titleMedium,
+
+                        fontWeight = FontWeight.Bold
+
+                    )
+
+                    Text(capability.manifest.description)
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        "Developer",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text("ID: ${capability.manifest.id}")
+                    Text("Version: ${capability.manifest.version}")
+                    Text("Category: ${capability.manifest.category}")
+                    Text("Status: ${capability.manifest.status}")
+
+                    Spacer(Modifier.height(16.dp))
+
+                    capability.Demo()
+
+                    Spacer(Modifier.height(16.dp))
+
+                }
+
             }
+
         }
+
     }
+
 }
