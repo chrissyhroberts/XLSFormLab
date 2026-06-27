@@ -8,6 +8,7 @@ import com.example.xlsformlab.core.CapabilityManifest
 import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.settings.CapabilitySetting
 
 class CalibratedScaleCapability : Capability {
 
@@ -18,6 +19,39 @@ class CalibratedScaleCapability : Capability {
         version = "1.0.0",
         category = CapabilityCategory.Measurement,
         status = CapabilityStatus.Experimental
+    )
+
+    override val settings = listOf(
+        CapabilitySetting.TextSetting(
+            id = "question",
+            label = "Question",
+            defaultValue = "Rate your pain"
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "minimum",
+            label = "Minimum",
+            defaultValue = 0f,
+            minimum = 0f,
+            maximum = 100f
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "maximum",
+            label = "Maximum",
+            defaultValue = 100f,
+            minimum = 0f,
+            maximum = 100f
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_numbers",
+            label = "Show numbers",
+            defaultValue = true
+        ),
+        CapabilitySetting.ChoiceSetting(
+            id = "orientation",
+            label = "Orientation",
+            defaultValue = "Horizontal",
+            choices = listOf("Horizontal", "Vertical")
+        )
     )
 
     @Composable
@@ -35,7 +69,9 @@ class CalibratedScaleCapability : Capability {
         Text("Help coming soon")
     }
 
-    override fun execute(request: CapabilityRequest): CapabilityResult {
+    override fun execute(
+        request: CapabilityRequest
+    ): CapabilityResult {
         return CapabilityResult(success = true)
     }
 }

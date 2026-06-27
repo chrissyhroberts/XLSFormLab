@@ -1,13 +1,10 @@
 package com.example.xlsformlab.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +22,10 @@ fun CapabilityCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+
             Text(
                 text = capability.manifest.name,
                 style = MaterialTheme.typography.titleMedium,
@@ -37,41 +37,40 @@ fun CapabilityCard(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             Text(
                 text = "${capability.manifest.status} • v${capability.manifest.version}",
                 style = MaterialTheme.typography.labelMedium
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(12.dp))
+            ExpandableSection(
+                title = "Demo",
+                initiallyExpanded = true
+            ) {
+                capability.Demo()
+            }
 
-            Text(
-                text = "Demo",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
+            ExpandableSection(
+                title = "Settings"
+            ) {
+                SettingsRenderer(
+                    settings = capability.settings
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            ExpandableSection(
+                title = "Help"
+            ) {
+                capability.Help()
+            }
 
-            capability.Demo()
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Diagnostics",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text("ID: ${capability.manifest.id}")
-            Text("Version: ${capability.manifest.version}")
-            Text("Category: ${capability.manifest.category}")
-            Text("Status: ${capability.manifest.status}")
+            ExpandableSection(
+                title = "Diagnostics"
+            ) {
+                Text("ID: ${capability.manifest.id}")
+                Text("Version: ${capability.manifest.version}")
+                Text("Category: ${capability.manifest.category}")
+                Text("Status: ${capability.manifest.status}")
+            }
         }
     }
 }
