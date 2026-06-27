@@ -10,34 +10,24 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.SettingsState
 
 @Composable
 fun SettingsRenderer(
-    settings: List<CapabilitySetting>
+    settings: List<CapabilitySetting>,
+    settingsState: SettingsState
 ) {
     Column {
-
         settings.forEach { setting ->
-
             when (setting) {
-
                 is CapabilitySetting.TextSetting -> {
-
-                    val value = remember {
-                        mutableStateOf(setting.defaultValue)
-                    }
-
                     OutlinedTextField(
-                        value = value.value,
-                        onValueChange = { value.value = it },
+                        value = settingsState.getString(setting.id),
+                        onValueChange = { settingsState.setString(setting.id, it) },
                         label = { Text(setting.label) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -46,11 +36,6 @@ fun SettingsRenderer(
                 }
 
                 is CapabilitySetting.BooleanSetting -> {
-
-                    val checked = remember {
-                        mutableStateOf(setting.defaultValue)
-                    }
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -61,53 +46,35 @@ fun SettingsRenderer(
                         Text(setting.label)
 
                         Switch(
-                            checked = checked.value,
-                            onCheckedChange = {
-                                checked.value = it
-                            }
+                            checked = settingsState.getBoolean(setting.id),
+                            onCheckedChange = { settingsState.setBoolean(setting.id, it) }
                         )
                     }
                 }
 
                 is CapabilitySetting.FloatSetting -> {
-
-                    val value = remember {
-                        mutableFloatStateOf(setting.defaultValue)
-                    }
-
-                    Text("${setting.label}: ${"%.1f".format(value.floatValue)}")
+                    Text("${setting.label}: ${"%.1f".format(settingsState.getFloat(setting.id))}")
 
                     Slider(
-                        value = value.floatValue,
-                        onValueChange = {
-                            value.floatValue = it
-                        },
+                        value = settingsState.getFloat(setting.id),
+                        onValueChange = { settingsState.setFloat(setting.id, it) },
                         valueRange = (setting.minimum ?: 0f)..(setting.maximum ?: 100f)
                     )
                 }
 
                 is CapabilitySetting.IntSetting -> {
-
-                    val value = remember {
-                        mutableIntStateOf(setting.defaultValue)
-                    }
-
-                    Text("${setting.label}: ${value.intValue}")
+                    Text("${setting.label}: ${settingsState.getInt(setting.id)}")
 
                     Slider(
-                        value = value.intValue.toFloat(),
-                        onValueChange = {
-                            value.intValue = it.toInt()
-                        },
+                        value = settingsState.getInt(setting.id).toFloat(),
+                        onValueChange = { settingsState.setInt(setting.id, it.toInt()) },
                         valueRange = (setting.minimum ?: 0).toFloat()..
-                                     (setting.maximum ?: 100).toFloat()
+                            (setting.maximum ?: 100).toFloat()
                     )
                 }
 
                 is CapabilitySetting.ChoiceSetting -> {
-
-                    Text("${setting.label}: ${setting.defaultValue}")
-
+                    Text("${setting.label}: ${settingsState.getString(setting.id)}")
                     Text(
                         setting.choices.joinToString(" • "),
                         modifier = Modifier.padding(bottom = 8.dp)
