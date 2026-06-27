@@ -51,7 +51,11 @@ fun CapabilityCard(
                 title = "Demo",
                 initiallyExpanded = true
             ) {
-                capability.Demo()
+                capability.Demo(
+
+    				settingsState = settingsState
+
+					)
             }
 
             ExpandableSection(

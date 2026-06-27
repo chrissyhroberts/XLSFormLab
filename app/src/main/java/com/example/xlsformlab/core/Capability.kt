@@ -2,6 +2,7 @@ package com.example.xlsformlab.core
 
 import androidx.compose.runtime.Composable
 import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.SettingsState
 
 interface Capability {
 
@@ -10,10 +11,9 @@ interface Capability {
     val settings: List<CapabilitySetting>
 
     @Composable
-    fun Demo()
-
-    @Composable
-    fun Settings()
+    fun Demo(
+        settingsState: SettingsState
+    )
 
     @Composable
     fun Help()

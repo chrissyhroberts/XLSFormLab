@@ -1,7 +1,13 @@
 package com.example.xlsformlab.modules.calibratedscale
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
 import com.example.xlsformlab.core.CapabilityCategory
 import com.example.xlsformlab.core.CapabilityManifest
@@ -9,6 +15,7 @@ import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
 import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.SettingsState
 
 class CalibratedScaleCapability : Capability {
 
@@ -55,13 +62,27 @@ class CalibratedScaleCapability : Capability {
     )
 
     @Composable
-    override fun Demo() {
-        Text("Calibrated Scale demo coming next")
-    }
+    override fun Demo(settingsState: SettingsState) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(settingsState.getString("question"))
 
-    @Composable
-    override fun Settings() {
-        Text("Settings coming soon")
+            Slider(
+                value = 50f,
+                onValueChange = {},
+                valueRange = settingsState.getFloat("minimum")..
+                    settingsState.getFloat("maximum"),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            if (settingsState.getBoolean("show_numbers")) {
+                Text(
+                    text = "${settingsState.getFloat("minimum")} – ${settingsState.getFloat("maximum")}",
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
     }
 
     @Composable
