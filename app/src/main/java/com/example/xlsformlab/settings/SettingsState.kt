@@ -1,12 +1,17 @@
 package com.example.xlsformlab.settings
 
+import androidx.compose.runtime.mutableStateMapOf
+
 class SettingsState(
     settings: List<CapabilitySetting>
 ) {
-    private val values: MutableMap<String, Any> =
-        settings.associate { setting ->
-            setting.id to setting.defaultValue()
-        }.toMutableMap()
+    private val values = mutableStateMapOf<String, Any>()
+
+    init {
+        settings.forEach { setting ->
+            values[setting.id] = setting.defaultValue()
+        }
+    }
 
     fun getString(id: String): String =
         values[id] as? String ?: ""

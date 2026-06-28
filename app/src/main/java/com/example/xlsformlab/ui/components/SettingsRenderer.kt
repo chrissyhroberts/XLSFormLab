@@ -31,7 +31,7 @@ fun SettingsRenderer(
                         label = { Text(setting.label) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp)
+                            .padding(vertical = 6.dp)
                     )
                 }
 
@@ -39,11 +39,14 @@ fun SettingsRenderer(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(setting.label)
+                        Text(
+                            text = setting.label,
+                            modifier = Modifier.weight(1f)
+                        )
 
                         Switch(
                             checked = settingsState.getBoolean(setting.id),
@@ -53,7 +56,10 @@ fun SettingsRenderer(
                 }
 
                 is CapabilitySetting.FloatSetting -> {
-                    Text("${setting.label}: ${"%.1f".format(settingsState.getFloat(setting.id))}")
+                    Text(
+                        text = "${setting.label}: ${"%.1f".format(settingsState.getFloat(setting.id))}",
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
 
                     Slider(
                         value = settingsState.getFloat(setting.id),
@@ -63,7 +69,10 @@ fun SettingsRenderer(
                 }
 
                 is CapabilitySetting.IntSetting -> {
-                    Text("${setting.label}: ${settingsState.getInt(setting.id)}")
+                    Text(
+                        text = "${setting.label}: ${settingsState.getInt(setting.id)}",
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
 
                     Slider(
                         value = settingsState.getInt(setting.id).toFloat(),
@@ -74,9 +83,13 @@ fun SettingsRenderer(
                 }
 
                 is CapabilitySetting.ChoiceSetting -> {
-                    Text("${setting.label}: ${settingsState.getString(setting.id)}")
                     Text(
-                        setting.choices.joinToString(" • "),
+                        text = "${setting.label}: ${settingsState.getString(setting.id)}",
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    Text(
+                        text = setting.choices.joinToString(" • "),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
