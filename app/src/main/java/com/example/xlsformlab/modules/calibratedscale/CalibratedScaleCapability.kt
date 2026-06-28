@@ -48,7 +48,16 @@ class CalibratedScaleCapability : Capability {
     )
 
     override val settings = listOf(
-        CapabilitySetting.FloatSetting("vas_length_mm", "VAS length (mm)", defaultValue = 100f, minimum = 40f, maximum = 200f),
+        CapabilitySetting.FloatSetting(
+        id="vas_length_mm",
+        label="VAS length",
+        defaultValue=100f,
+        minimum=40f,
+        maximum=200f,
+        step=0.5f,
+        unit="mm",
+        decimals=1
+    ),
         CapabilitySetting.TextSetting("prompt", "Prompt", defaultValue = "Rate your pain"),
         CapabilitySetting.FloatSetting("minimum", "Minimum value", defaultValue = 0f, minimum = 0f, maximum = 100f),
         CapabilitySetting.FloatSetting("maximum", "Maximum value", defaultValue = 100f, minimum = 0f, maximum = 100f),
