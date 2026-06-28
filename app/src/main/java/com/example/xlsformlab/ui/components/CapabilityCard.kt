@@ -74,6 +74,12 @@ fun CapabilityCard(
             }
 
             ExpandableSection(
+                title = "Output"
+            ) {
+                Text("Output preview coming soon")
+            }
+
+            ExpandableSection(
                 title = "Diagnostics"
             ) {
                 Text("ID: ${capability.manifest.id}")

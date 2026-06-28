@@ -49,30 +49,111 @@ class CalibratedScaleCapability : Capability {
 
     override val settings = listOf(
         CapabilitySetting.FloatSetting(
-        id="vas_length_mm",
-        label="VAS length",
-        defaultValue=100f,
-        minimum=40f,
-        maximum=200f,
-        step=0.5f,
-        unit="mm",
-        decimals=1
-    ),
-        CapabilitySetting.TextSetting("prompt", "Prompt", defaultValue = "Rate your pain"),
-        CapabilitySetting.FloatSetting("minimum", "Minimum value", defaultValue = 0f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.FloatSetting("maximum", "Maximum value", defaultValue = 100f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.BooleanSetting("use_range", "Use two scales", defaultValue = false),
-        CapabilitySetting.TextSetting("lower_label", "Lower scale label", defaultValue = "Minimum selected value"),
-        CapabilitySetting.TextSetting("upper_label", "Upper scale label", defaultValue = "Maximum selected value"),
-        CapabilitySetting.FloatSetting("value", "Current value", defaultValue = 50f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.FloatSetting("lower_value", "Lower selected value", defaultValue = 25f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.FloatSetting("upper_value", "Upper selected value", defaultValue = 75f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.BooleanSetting("show_endpoint_labels", "Show endpoint labels", defaultValue = true),
-        CapabilitySetting.BooleanSetting("show_current_score", "Show current value", defaultValue = true),
-        CapabilitySetting.BooleanSetting("vertical_mode", "Vertical mode", defaultValue = false)
+            id = "vas_length_mm",
+            label = "VAS length",
+            group = "Appearance",
+            defaultValue = 100f,
+            minimum = 40f,
+            maximum = 200f,
+            step = 0.5f,
+            unit = "mm",
+            decimals = 1
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "vertical_mode",
+            label = "Vertical mode",
+            group = "Appearance",
+            defaultValue = false
+        ),
+        CapabilitySetting.TextSetting(
+            id = "prompt",
+            label = "Prompt",
+            group = "Scale",
+            defaultValue = "Rate your pain"
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "minimum",
+            label = "Minimum value",
+            group = "Scale",
+            defaultValue = 0f,
+            minimum = 0f,
+            maximum = 100f,
+            step = 1f,
+            decimals = 0
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "maximum",
+            label = "Maximum value",
+            group = "Scale",
+            defaultValue = 100f,
+            minimum = 0f,
+            maximum = 100f,
+            step = 1f,
+            decimals = 0
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "use_range",
+            label = "Use two scales",
+            group = "Range",
+            defaultValue = false
+        ),
+        CapabilitySetting.TextSetting(
+            id = "lower_label",
+            label = "Lower scale label",
+            group = "Range",
+            defaultValue = "Minimum selected value"
+        ),
+        CapabilitySetting.TextSetting(
+            id = "upper_label",
+            label = "Upper scale label",
+            group = "Range",
+            defaultValue = "Maximum selected value"
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "value",
+            label = "Current value",
+            group = "Display",
+            defaultValue = 50f,
+            minimum = 0f,
+            maximum = 100f,
+            step = 1f,
+            decimals = 0
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "lower_value",
+            label = "Lower selected value",
+            group = "Display",
+            defaultValue = 25f,
+            minimum = 0f,
+            maximum = 100f,
+            step = 1f,
+            decimals = 0
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "upper_value",
+            label = "Upper selected value",
+            group = "Display",
+            defaultValue = 75f,
+            minimum = 0f,
+            maximum = 100f,
+            step = 1f,
+            decimals = 0
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_endpoint_labels",
+            label = "Show endpoint labels",
+            group = "Display",
+            defaultValue = true
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_current_score",
+            label = "Show current value",
+            group = "Display",
+            defaultValue = true
+        )
     )
 
-    @Composable
+@Composable
     override fun Demo(settingsState: SettingsState) {
         val minimum = settingsState.getFloat("minimum")
         val maximum = settingsState.getFloat("maximum").let {

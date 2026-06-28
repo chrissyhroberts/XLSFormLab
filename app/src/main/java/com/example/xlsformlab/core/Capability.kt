@@ -18,6 +18,12 @@ interface Capability {
     @Composable
     fun Help()
 
+    fun buildOutput(
+        settingsState: SettingsState
+    ): CapabilityOutput {
+        return CapabilityOutput()
+    }
+
     fun execute(
         request: CapabilityRequest
     ): CapabilityResult
