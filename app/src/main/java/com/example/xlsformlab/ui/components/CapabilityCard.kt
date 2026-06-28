@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,8 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
 import com.example.xlsformlab.core.CapabilityOutputValidator
+import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsRepository
 import com.example.xlsformlab.settings.SettingsState
+import com.example.xlsformlab.transport.LaunchConfigParser
 import com.example.xlsformlab.transport.LaunchTarget
 import com.example.xlsformlab.transport.OutputFormatter
 import com.example.xlsformlab.transport.ReturnMode
@@ -150,6 +153,14 @@ private fun CapabilityOutputPanel(
         mutableStateOf(LaunchTarget.Appearance)
     }
 
+    var pastedLaunchText by remember {
+        mutableStateOf("")
+    }
+
+    var parserMessage by remember {
+        mutableStateOf("")
+    }
+
     val returnPreview = OutputFormatter.format(
         output = output,
         returnMode = returnMode
@@ -263,6 +274,59 @@ private fun CapabilityOutputPanel(
         }
 
         Text(
+            text = "Import existing launch string",
+            modifier = Modifier.padding(top = 12.dp),
+            fontWeight = FontWeight.Bold
+        )
+
+        OutlinedTextField(
+            value = pastedLaunchText,
+            onValueChange = {
+                pastedLaunchText = it
+            },
+            label = {
+                Text("Paste appearance or intent")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            minLines = 2,
+            maxLines = 5
+        )
+
+        Button(
+            modifier = Modifier.padding(top = 8.dp),
+            onClick = {
+                val parsed = LaunchConfigParser.parse(pastedLaunchText)
+
+                parserMessage = applyParsedLaunchConfig(
+                    capability = capability,
+                    settingsState = settingsState,
+                    parsedCapabilityId = parsed.capabilityId,
+                    parsedReturnMode = parsed.returnMode,
+                    parsedSettings = parsed.settings
+                )
+
+                parsed.returnMode?.let {
+                    returnMode = it
+                }
+
+                if (parsed.warnings.isNotEmpty()) {
+                    parserMessage += " ${parsed.warnings.joinToString(" ")}"
+                }
+            }
+        ) {
+            Text("Apply pasted config")
+        }
+
+        if (parserMessage.isNotBlank()) {
+            Text(
+                text = parserMessage,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+        }
+
+        Text(
             text = "Launch preview",
             modifier = Modifier.padding(top = 12.dp),
             fontWeight = FontWeight.Bold
@@ -306,6 +370,118 @@ private fun CapabilityOutputPanel(
             }
         ) {
             Text("Copy return preview")
+        }
+    }
+}
+
+private fun applyParsedLaunchConfig(
+    capability: Capability,
+    settingsState: SettingsState,
+    parsedCapabilityId: String?,
+    parsedReturnMode: ReturnMode?,
+    parsedSettings: Map<String, String>
+): String {
+    if (parsedCapabilityId != null && parsedCapabilityId != capability.manifest.id) {
+        return "Parsed capability '${parsedCapabilityId}' does not match '${capability.manifest.id}'."
+    }
+
+    var applied = 0
+    var skipped = 0
+
+    capability.settings.forEach { setting ->
+        val value = parsedSettings[setting.id]
+
+        if (value == null) {
+            return@forEach
+        }
+
+        val success = applySettingValue(
+            setting = setting,
+            settingsState = settingsState,
+            value = value
+        )
+
+        if (success) {
+            applied += 1
+        } else {
+            skipped += 1
+        }
+    }
+
+    val unknownCount = parsedSettings.keys
+        .count { settingId ->
+            capability.settings.none { it.id == settingId }
+        }
+
+    val returnModeText = if (parsedReturnMode != null) {
+        " Return mode: ${parsedReturnMode.label}."
+    } else {
+        ""
+    }
+
+    return "Applied $applied setting(s). Skipped $skipped invalid value(s). Unknown setting(s): $unknownCount.$returnModeText"
+}
+
+private fun applySettingValue(
+    setting: CapabilitySetting,
+    settingsState: SettingsState,
+    value: String
+): Boolean {
+    return when (setting) {
+        is CapabilitySetting.BooleanSetting -> {
+            when (value.lowercase()) {
+                "true", "1", "yes" -> {
+                    settingsState.setBoolean(setting.id, true)
+                    true
+                }
+
+                "false", "0", "no" -> {
+                    settingsState.setBoolean(setting.id, false)
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        is CapabilitySetting.IntSetting -> {
+            value.toIntOrNull()?.let {
+                settingsState.setInt(
+                    setting.id,
+                    it.coerceIn(
+                        setting.minimum ?: Int.MIN_VALUE,
+                        setting.maximum ?: Int.MAX_VALUE
+                    )
+                )
+                true
+            } ?: false
+        }
+
+        is CapabilitySetting.FloatSetting -> {
+            value.toFloatOrNull()?.let {
+                settingsState.setFloat(
+                    setting.id,
+                    it.coerceIn(
+                        setting.minimum ?: -Float.MAX_VALUE,
+                        setting.maximum ?: Float.MAX_VALUE
+                    )
+                )
+                true
+            } ?: false
+        }
+
+        is CapabilitySetting.TextSetting -> {
+            settingsState.setString(setting.id, value)
+            true
+        }
+
+        is CapabilitySetting.ChoiceSetting -> {
+            if (setting.choices.contains(value)) {
+                settingsState.setString(setting.id, value)
+                true
+            } else {
+                false
+            }
         }
     }
 }

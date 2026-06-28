@@ -1,11 +1,13 @@
 package com.example.xlsformlab.core
 
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleCapability
+import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintCapability
 
 object CapabilityRegistry {
 
     private val capabilities = listOf(
-        CalibratedScaleCapability()
+        CalibratedScaleCapability(),
+        AdminFingerprintCapability()
     )
 
     fun all(): List<Capability> = capabilities
