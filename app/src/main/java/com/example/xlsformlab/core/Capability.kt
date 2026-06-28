@@ -10,6 +10,9 @@ interface Capability {
 
     val settings: List<CapabilitySetting>
 
+    val outputSchema: CapabilityOutputSchema
+        get() = CapabilityOutputSchema()
+
     @Composable
     fun Demo(
         settingsState: SettingsState

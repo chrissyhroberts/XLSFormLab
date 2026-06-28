@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.CapabilityOutputValidator
 import com.example.xlsformlab.settings.SettingsRepository
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.LaunchTarget
@@ -136,6 +137,10 @@ private fun CapabilityOutputPanel(
 ) {
     val clipboardManager = LocalClipboardManager.current
     val output = capability.buildOutput(settingsState)
+    val validation = CapabilityOutputValidator.validate(
+        schema = capability.outputSchema,
+        output = output
+    )
 
     var returnMode by remember {
         mutableStateOf(ReturnMode.Json)
@@ -180,7 +185,38 @@ private fun CapabilityOutputPanel(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
+            text = "Output schema",
+            fontWeight = FontWeight.Bold
+        )
+
+        if (capability.outputSchema.fields.isEmpty()) {
+            Text(
+                text = "No output schema declared.",
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        } else {
+            capability.outputSchema.fields.forEach { field ->
+                Text(
+                    text = "${field.id}: ${field.type}${if (field.required) " required" else " optional"}",
+                    modifier = Modifier.padding(top = 2.dp),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+        }
+
+        Text(
+            text = if (validation.valid) {
+                "Validation: OK"
+            } else {
+                "Validation: ${validation.messages.joinToString("; ")}"
+            },
+            modifier = Modifier.padding(top = 8.dp),
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Text(
             text = "Return format",
+            modifier = Modifier.padding(top = 12.dp),
             fontWeight = FontWeight.Bold
         )
 

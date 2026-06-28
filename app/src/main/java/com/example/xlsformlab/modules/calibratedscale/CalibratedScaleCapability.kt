@@ -33,6 +33,9 @@ import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
 import com.example.xlsformlab.core.CapabilityOutput
+import com.example.xlsformlab.core.CapabilityField
+import com.example.xlsformlab.core.CapabilityFieldType
+import com.example.xlsformlab.core.CapabilityOutputSchema
 import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsState
 
@@ -46,6 +49,42 @@ class CalibratedScaleCapability : Capability {
         version = "1.0.0",
         category = CapabilityCategory.Measurement,
         status = CapabilityStatus.Experimental
+    )
+
+
+    override val outputSchema = CapabilityOutputSchema(
+        fields = listOf(
+            CapabilityField(
+                id = "value",
+                label = "Current value",
+                type = CapabilityFieldType.Float,
+                required = true
+            ),
+            CapabilityField(
+                id = "minimum",
+                label = "Minimum scale value",
+                type = CapabilityFieldType.Float,
+                required = true
+            ),
+            CapabilityField(
+                id = "maximum",
+                label = "Maximum scale value",
+                type = CapabilityFieldType.Float,
+                required = true
+            ),
+            CapabilityField(
+                id = "lower_value",
+                label = "Lower selected value",
+                type = CapabilityFieldType.Float,
+                required = false
+            ),
+            CapabilityField(
+                id = "upper_value",
+                label = "Upper selected value",
+                type = CapabilityFieldType.Float,
+                required = false
+            )
+        )
     )
 
     override val settings = listOf(
