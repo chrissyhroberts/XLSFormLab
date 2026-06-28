@@ -6,87 +6,87 @@ import java.net.URLEncoder
 
 object OdkIntentBuilder {
 
-    private const val APP_PACKAGE = "com.example.xlsformlab"
-    private const val ACTION_RUN_CAPABILITY = "com.example.xlsformlab.RUN_CAPABILITY"
-
-    fun buildIntentUri(
+    fun buildAppearanceColumnValue(
         capability: Capability,
         settingsState: SettingsState,
         returnMode: String
     ): String {
-        val builder = StringBuilder()
-
-        builder.append("intent:#Intent;")
-        builder.append("action=").append(ACTION_RUN_CAPABILITY).append(";")
-        builder.append("package=").append(APP_PACKAGE).append(";")
-        builder.append("S.capability_id=").append(encode(capability.manifest.id)).append(";")
-        builder.append("S.return_mode=").append(encode(returnMode)).append(";")
-
-        settingsState.asMap()
+        val settings = settingsState.asMap()
             .toSortedMap()
-            .forEach { (key, value) ->
-                appendExtra(
-                    builder = builder,
-                    key = key,
-                    value = value
-                )
+            .map { (key, value) ->
+                "$key=${encode(value.toString())}"
             }
+            .joinToString(";")
 
-        builder.append("end")
-        return builder.toString()
+        return "xlsformlab(capability=${capability.manifest.id};return_mode=$returnMode;$settings)"
     }
 
-    private fun appendExtra(
-        builder: StringBuilder,
-        key: String,
-        value: Any
-    ) {
-        when (value) {
-            is Boolean -> {
-                builder.append("B.")
-                    .append(key)
-                    .append("=")
-                    .append(value)
-                    .append(";")
-            }
+    fun buildIntentColumnValue(
+        capability: Capability,
+        settingsState: SettingsState,
+        returnMode: String
+    ): String {
+        return buildAndroidIntentUri(
+            capability = capability,
+            settingsState = settingsState,
+            returnMode = returnMode
+        )
+    }
 
-            is Int -> {
-                builder.append("i.")
-                    .append(key)
-                    .append("=")
-                    .append(value)
-                    .append(";")
-            }
+    fun buildAndroidIntentUri(
+        capability: Capability,
+        settingsState: SettingsState,
+        returnMode: String
+    ): String {
+        val extras = mutableListOf<String>()
 
-            is Float -> {
-                builder.append("f.")
-                    .append(key)
-                    .append("=")
-                    .append(value)
-                    .append(";")
-            }
+        extras += "S.capability_id=${capability.manifest.id}"
+        extras += "S.return_mode=$returnMode"
 
-            is Double -> {
-                builder.append("d.")
-                    .append(key)
-                    .append("=")
-                    .append(value)
-                    .append(";")
+        settingsState.asMap().toSortedMap().forEach { (key, value) ->
+            extras += when (value) {
+                is Boolean -> "B.$key=$value"
+                is Int -> "i.$key=$value"
+                is Float -> "f.$key=$value"
+                is Double -> "f.$key=$value"
+                else -> "S.$key=${encode(value.toString())}"
             }
+        }
 
-            else -> {
-                builder.append("S.")
-                    .append(key)
-                    .append("=")
-                    .append(encode(value.toString()))
-                    .append(";")
+        return buildString {
+            append("intent:#Intent;")
+            append("action=com.example.xlsformlab.RUN_CAPABILITY;")
+            append("package=com.example.xlsformlab;")
+            append(extras.joinToString(separator = ";"))
+            append(";end")
+        }
+    }
+
+    fun buildKotlinIntentSnippet(
+        capability: Capability,
+        settingsState: SettingsState,
+        returnMode: String
+    ): String {
+        val extras = mutableListOf<String>()
+        extras += ".putExtra(\"capability_id\", \"${capability.manifest.id}\")"
+        extras += ".putExtra(\"return_mode\", \"$returnMode\")"
+
+        settingsState.asMap().toSortedMap().forEach { (key, value) ->
+            val renderedValue = when (value) {
+                is String -> "\"$value\""
+                else -> value.toString()
             }
+            extras += ".putExtra(\"$key\", $renderedValue)"
+        }
+
+        return buildString {
+            append("Intent(\"com.example.xlsformlab.RUN_CAPABILITY\")\n")
+            append("    .setPackage(\"com.example.xlsformlab\")\n")
+            append(extras.joinToString("\n") { "    $it" })
         }
     }
 
     private fun encode(value: String): String {
-        return URLEncoder
-            .encode(value, "UTF-8")
-            .replace("+", "%20")
+        return URLEncoder.encode(value, "UTF-8").replace("+", "%20")
     }
 }

@@ -10,7 +10,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,22 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
 import com.example.xlsformlab.core.CapabilityOutput
 import com.example.xlsformlab.intents.OdkIntentBuilder
 import com.example.xlsformlab.settings.SettingsState
-
-private enum class OutputPreviewMode(
-    val label: String,
-    val intentValue: String
-) {
-    Single("Single", "single"),
-    Fields("Fields", "fields"),
-    Json("JSON", "json"),
-    Datapoints("Datapoints", "datapoints")
-}
 
 @Composable
 fun CapabilityCard(
@@ -96,10 +86,9 @@ fun CapabilityCard(
             ExpandableSection(
                 title = "Output"
             ) {
-                OutputPreview(
+                CapabilityOutputPanel(
                     capability = capability,
-                    settingsState = settingsState,
-                    output = capability.buildOutput(settingsState)
+                    settingsState = settingsState
                 )
             }
 
@@ -117,185 +106,199 @@ fun CapabilityCard(
 }
 
 @Composable
-private fun OutputPreview(
+private fun CapabilityOutputPanel(
     capability: Capability,
-    settingsState: SettingsState,
-    output: CapabilityOutput
+    settingsState: SettingsState
 ) {
-    var mode by remember {
-        mutableStateOf(OutputPreviewMode.Fields)
+    val clipboardManager = LocalClipboardManager.current
+    val output = capability.buildOutput(settingsState)
+
+    var returnMode by remember {
+        mutableStateOf("json")
     }
 
-    val clipboardManager = LocalClipboardManager.current
-    val previewText = output.previewFor(mode)
-    val intentText = OdkIntentBuilder.buildIntentUri(
+    var launchTarget by remember {
+        mutableStateOf("appearance")
+    }
+
+    val returnPreview = formatReturnPreview(
+        output = output,
+        returnMode = returnMode
+    )
+
+    val appearancePreview = OdkIntentBuilder.buildAppearanceColumnValue(
         capability = capability,
         settingsState = settingsState,
-        returnMode = mode.intentValue
+        returnMode = returnMode
     )
+
+    val intentColumnPreview = OdkIntentBuilder.buildIntentColumnValue(
+        capability = capability,
+        settingsState = settingsState,
+        returnMode = returnMode
+    )
+
+    val androidIntentPreview = OdkIntentBuilder.buildAndroidIntentUri(
+        capability = capability,
+        settingsState = settingsState,
+        returnMode = returnMode
+    )
+
+    val kotlinIntentPreview = OdkIntentBuilder.buildKotlinIntentSnippet(
+        capability = capability,
+        settingsState = settingsState,
+        returnMode = returnMode
+    )
+
+    val launchPreview = when (launchTarget) {
+        "appearance" -> appearancePreview
+        "intent_column" -> intentColumnPreview
+        "android_intent" -> androidIntentPreview
+        "kotlin_intent" -> kotlinIntentPreview
+        else -> appearancePreview
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row {
-            OutputModeButton(
-                label = OutputPreviewMode.Single.label,
-                selected = mode == OutputPreviewMode.Single,
-                onClick = { mode = OutputPreviewMode.Single }
-            )
+        Text(
+            text = "Return format",
+            fontWeight = FontWeight.Bold
+        )
 
-            Spacer(modifier = Modifier.width(8.dp))
+        Column(
+            modifier = Modifier.padding(top = 6.dp)
+        ) {
+            Row {
+                ModeButton("Single", "single", returnMode) { returnMode = it }
+                Spacer(Modifier.width(6.dp))
+                ModeButton("Fields", "fields", returnMode) { returnMode = it }
+            }
 
-            OutputModeButton(
-                label = OutputPreviewMode.Fields.label,
-                selected = mode == OutputPreviewMode.Fields,
-                onClick = { mode = OutputPreviewMode.Fields }
-            )
+            Row(
+                modifier = Modifier.padding(top = 6.dp)
+            ) {
+                ModeButton("JSON", "json", returnMode) { returnMode = it }
+                Spacer(Modifier.width(6.dp))
+                ModeButton("Datapoints", "datapoints", returnMode) { returnMode = it }
+            }
+        }
+
+        Text(
+            text = "Launch target",
+            modifier = Modifier.padding(top = 12.dp),
+            fontWeight = FontWeight.Bold
+        )
+
+        Row(
+            modifier = Modifier.padding(top = 6.dp)
+        ) {
+            ModeButton("Appearance", "appearance", launchTarget) { launchTarget = it }
+            Spacer(Modifier.width(6.dp))
+            ModeButton("Intent column", "intent_column", launchTarget) { launchTarget = it }
         }
 
         Row(
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = 6.dp)
         ) {
-            OutputModeButton(
-                label = OutputPreviewMode.Json.label,
-                selected = mode == OutputPreviewMode.Json,
-                onClick = { mode = OutputPreviewMode.Json }
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            OutputModeButton(
-                label = OutputPreviewMode.Datapoints.label,
-                selected = mode == OutputPreviewMode.Datapoints,
-                onClick = { mode = OutputPreviewMode.Datapoints }
-            )
+            ModeButton("Android URI", "android_intent", launchTarget) { launchTarget = it }
+            Spacer(Modifier.width(6.dp))
+            ModeButton("Kotlin", "kotlin_intent", launchTarget) { launchTarget = it }
         }
 
         Text(
-            text = previewText,
+            text = "Launch preview",
             modifier = Modifier.padding(top = 12.dp),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Button(
-            onClick = {
-                clipboardManager.setText(
-                    AnnotatedString(previewText)
-                )
-            },
-            modifier = Modifier.padding(top = 12.dp)
-        ) {
-            Text("Copy preview")
-        }
-
-        Text(
-            text = "Intent",
-            modifier = Modifier.padding(top = 16.dp),
-            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold
         )
 
         Text(
-            text = intentText,
-            modifier = Modifier.padding(top = 8.dp),
-            style = MaterialTheme.typography.bodySmall
+            text = launchPreview,
+            modifier = Modifier.padding(top = 4.dp),
+            fontFamily = FontFamily.Monospace
         )
 
         Button(
+            modifier = Modifier.padding(top = 8.dp),
             onClick = {
                 clipboardManager.setText(
-                    AnnotatedString(intentText)
+                    AnnotatedString(launchPreview)
                 )
-            },
-            modifier = Modifier.padding(top = 12.dp)
+            }
         ) {
-            Text("Copy XLSForm intent")
+            Text("Copy launch preview")
+        }
+
+        Text(
+            text = "Return preview",
+            modifier = Modifier.padding(top = 12.dp),
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = returnPreview,
+            modifier = Modifier.padding(top = 4.dp),
+            fontFamily = FontFamily.Monospace
+        )
+
+        Button(
+            modifier = Modifier.padding(top = 8.dp),
+            onClick = {
+                clipboardManager.setText(
+                    AnnotatedString(returnPreview)
+                )
+            }
+        ) {
+            Text("Copy return preview")
         }
     }
 }
 
 @Composable
-private fun OutputModeButton(
+private fun ModeButton(
     label: String,
-    selected: Boolean,
-    onClick: () -> Unit
+    value: String,
+    selectedValue: String,
+    onSelected: (String) -> Unit
 ) {
-    if (selected) {
-        Button(onClick = onClick) {
-            Text(label)
-        }
-    } else {
-        OutlinedButton(onClick = onClick) {
-            Text(label)
-        }
+    Button(
+        onClick = {
+            onSelected(value)
+        },
+        enabled = value != selectedValue
+    ) {
+        Text(label)
     }
 }
 
-private fun CapabilityOutput.previewFor(
-    mode: OutputPreviewMode
+private fun formatReturnPreview(
+    output: CapabilityOutput,
+    returnMode: String
 ): String {
-    return when (mode) {
-        OutputPreviewMode.Single -> asSinglePreview()
-        OutputPreviewMode.Fields -> asFieldsPreview()
-        OutputPreviewMode.Json -> asJsonPreview()
-        OutputPreviewMode.Datapoints -> asDatapointsPreview()
+    return when (returnMode) {
+        "single" -> output.fields.values.firstOrNull()?.toString() ?: ""
+        "fields" -> output.fields.entries.joinToString("\n") { (key, value) ->
+            "$key=$value"
+        }
+        "json" -> output.fields.entries.joinToString(
+            prefix = "{\n",
+            separator = ",\n",
+            postfix = "\n}"
+        ) { (key, value) ->
+            "  \"$key\": ${formatJsonValue(value)}"
+        }
+        "datapoints" -> output.fields.entries.mapIndexed { index, entry ->
+            "${index + 1},${entry.key},${entry.value}"
+        }.joinToString("\n")
+        else -> output.fields.toString()
     }
 }
 
-private fun CapabilityOutput.asSinglePreview(): String {
-    if (fields.isEmpty()) {
-        return ""
-    }
-
-    return fields.values.firstOrNull()?.toString() ?: ""
-}
-
-private fun CapabilityOutput.asFieldsPreview(): String {
-    if (fields.isEmpty()) {
-        return "No output fields"
-    }
-
-    return fields.entries.joinToString(separator = "\n") { (key, value) ->
-        "$key = ${value ?: ""}"
-    }
-}
-
-private fun CapabilityOutput.asJsonPreview(): String {
-    if (fields.isEmpty()) {
-        return "{}"
-    }
-
-    return fields.entries.joinToString(
-        separator = ",\n",
-        prefix = "{\n",
-        postfix = "\n}"
-    ) { (key, value) ->
-        "  \"${key.escapeJson()}\": ${value.toJsonValue()}"
-    }
-}
-
-private fun CapabilityOutput.asDatapointsPreview(): String {
-    if (fields.isEmpty()) {
-        return "No datapoints"
-    }
-
-    return fields.entries.mapIndexed { index, entry ->
-        "${index + 1}. ${entry.key} = ${entry.value ?: ""}"
-    }.joinToString(separator = "\n")
-}
-
-private fun Any?.toJsonValue(): String {
-    return when (this) {
+private fun formatJsonValue(value: Any?): String {
+    return when (value) {
         null -> "null"
-        is Number -> this.toString()
-        is Boolean -> this.toString()
-        else -> "\"${this.toString().escapeJson()}\""
+        is Number -> value.toString()
+        is Boolean -> value.toString()
+        else -> "\"${value.toString().replace("\"", "\\\"")}\""
     }
-}
-
-private fun String.escapeJson(): String {
-    return this
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", "\\n")
 }
