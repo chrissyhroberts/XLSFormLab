@@ -24,11 +24,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
 import com.example.xlsformlab.core.CapabilityOutput
+import com.example.xlsformlab.intents.OdkIntentBuilder
 import com.example.xlsformlab.settings.SettingsState
 
-private enum class OutputPreviewMode {
-    Fields,
-    Json
+private enum class OutputPreviewMode(
+    val label: String,
+    val intentValue: String
+) {
+    Single("Single", "single"),
+    Fields("Fields", "fields"),
+    Json("JSON", "json"),
+    Datapoints("Datapoints", "datapoints")
 }
 
 @Composable
@@ -91,6 +97,8 @@ fun CapabilityCard(
                 title = "Output"
             ) {
                 OutputPreview(
+                    capability = capability,
+                    settingsState = settingsState,
                     output = capability.buildOutput(settingsState)
                 )
             }
@@ -110,6 +118,8 @@ fun CapabilityCard(
 
 @Composable
 private fun OutputPreview(
+    capability: Capability,
+    settingsState: SettingsState,
     output: CapabilityOutput
 ) {
     var mode by remember {
@@ -117,36 +127,48 @@ private fun OutputPreview(
     }
 
     val clipboardManager = LocalClipboardManager.current
-    val previewText = when (mode) {
-        OutputPreviewMode.Fields -> output.asFieldsPreview()
-        OutputPreviewMode.Json -> output.asJsonPreview()
-    }
+    val previewText = output.previewFor(mode)
+    val intentText = OdkIntentBuilder.buildIntentUri(
+        capability = capability,
+        settingsState = settingsState,
+        returnMode = mode.intentValue
+    )
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row {
-            if (mode == OutputPreviewMode.Fields) {
-                Button(onClick = { mode = OutputPreviewMode.Fields }) {
-                    Text("Fields")
-                }
-            } else {
-                OutlinedButton(onClick = { mode = OutputPreviewMode.Fields }) {
-                    Text("Fields")
-                }
-            }
+            OutputModeButton(
+                label = OutputPreviewMode.Single.label,
+                selected = mode == OutputPreviewMode.Single,
+                onClick = { mode = OutputPreviewMode.Single }
+            )
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (mode == OutputPreviewMode.Json) {
-                Button(onClick = { mode = OutputPreviewMode.Json }) {
-                    Text("JSON")
-                }
-            } else {
-                OutlinedButton(onClick = { mode = OutputPreviewMode.Json }) {
-                    Text("JSON")
-                }
-            }
+            OutputModeButton(
+                label = OutputPreviewMode.Fields.label,
+                selected = mode == OutputPreviewMode.Fields,
+                onClick = { mode = OutputPreviewMode.Fields }
+            )
+        }
+
+        Row(
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            OutputModeButton(
+                label = OutputPreviewMode.Json.label,
+                selected = mode == OutputPreviewMode.Json,
+                onClick = { mode = OutputPreviewMode.Json }
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutputModeButton(
+                label = OutputPreviewMode.Datapoints.label,
+                selected = mode == OutputPreviewMode.Datapoints,
+                onClick = { mode = OutputPreviewMode.Datapoints }
+            )
         }
 
         Text(
@@ -165,7 +187,67 @@ private fun OutputPreview(
         ) {
             Text("Copy preview")
         }
+
+        Text(
+            text = "Intent",
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = intentText,
+            modifier = Modifier.padding(top = 8.dp),
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Button(
+            onClick = {
+                clipboardManager.setText(
+                    AnnotatedString(intentText)
+                )
+            },
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text("Copy XLSForm intent")
+        }
     }
+}
+
+@Composable
+private fun OutputModeButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    if (selected) {
+        Button(onClick = onClick) {
+            Text(label)
+        }
+    } else {
+        OutlinedButton(onClick = onClick) {
+            Text(label)
+        }
+    }
+}
+
+private fun CapabilityOutput.previewFor(
+    mode: OutputPreviewMode
+): String {
+    return when (mode) {
+        OutputPreviewMode.Single -> asSinglePreview()
+        OutputPreviewMode.Fields -> asFieldsPreview()
+        OutputPreviewMode.Json -> asJsonPreview()
+        OutputPreviewMode.Datapoints -> asDatapointsPreview()
+    }
+}
+
+private fun CapabilityOutput.asSinglePreview(): String {
+    if (fields.isEmpty()) {
+        return ""
+    }
+
+    return fields.values.firstOrNull()?.toString() ?: ""
 }
 
 private fun CapabilityOutput.asFieldsPreview(): String {
@@ -190,6 +272,16 @@ private fun CapabilityOutput.asJsonPreview(): String {
     ) { (key, value) ->
         "  \"${key.escapeJson()}\": ${value.toJsonValue()}"
     }
+}
+
+private fun CapabilityOutput.asDatapointsPreview(): String {
+    if (fields.isEmpty()) {
+        return "No datapoints"
+    }
+
+    return fields.entries.mapIndexed { index, entry ->
+        "${index + 1}. ${entry.key} = ${entry.value ?: ""}"
+    }.joinToString(separator = "\n")
 }
 
 private fun Any?.toJsonValue(): String {
