@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.xlsformlab.calibration.CalibrationScreen
 import com.example.xlsformlab.core.CapabilityCategory
 import com.example.xlsformlab.core.CapabilityRegistry
 import com.example.xlsformlab.ui.components.CapabilityCard
@@ -46,8 +47,54 @@ fun HomeScreen() {
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            item {
+                CalibrationCard()
+            }
+
             items(CapabilityCategory.entries) { category ->
                 CapabilityCategoryCard(category = category)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalibrationCard() {
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        elevation = CardDefaults.elevatedCardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        expanded = !expanded
+                    }
+            ) {
+                Text(
+                    text = if (expanded) {
+                        "▼ Device calibration"
+                    } else {
+                        "▶ Device calibration"
+                    },
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (expanded) {
+                Spacer(Modifier.height(12.dp))
+                CalibrationScreen()
             }
         }
     }

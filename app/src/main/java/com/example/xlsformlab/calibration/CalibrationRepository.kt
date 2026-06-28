@@ -1,16 +1,19 @@
 package com.example.xlsformlab.calibration
 
+import androidx.compose.runtime.mutableStateOf
+
 object CalibrationRepository {
 
-    private var calibration = DeviceCalibration()
+    var calibration = mutableStateOf(DeviceCalibration())
+        private set
 
     fun current(): DeviceCalibration {
-        return calibration
+        return calibration.value
     }
 
     fun update(dpPerMm: Float) {
-        calibration = DeviceCalibration(
-            dpPerMm = dpPerMm,
+        calibration.value = DeviceCalibration(
+            dpPerMm = dpPerMm.coerceIn(1f, 10f),
             calibrated = true
         )
     }
