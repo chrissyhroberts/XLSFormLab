@@ -23,9 +23,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityOutput
-import com.example.xlsformlab.intents.OdkIntentBuilder
 import com.example.xlsformlab.settings.SettingsState
+import com.example.xlsformlab.transport.LaunchTarget
+import com.example.xlsformlab.transport.OutputFormatter
+import com.example.xlsformlab.transport.ReturnMode
+import com.example.xlsformlab.transport.android.AndroidIntentUriBuilder
+import com.example.xlsformlab.transport.android.KotlinIntentSnippetBuilder
+import com.example.xlsformlab.transport.odk.OdkAppearanceBuilder
+import com.example.xlsformlab.transport.odk.OdkIntentColumnBuilder
 
 @Composable
 fun CapabilityCard(
@@ -114,48 +119,42 @@ private fun CapabilityOutputPanel(
     val output = capability.buildOutput(settingsState)
 
     var returnMode by remember {
-        mutableStateOf("json")
+        mutableStateOf(ReturnMode.Json)
     }
 
     var launchTarget by remember {
-        mutableStateOf("appearance")
+        mutableStateOf(LaunchTarget.Appearance)
     }
 
-    val returnPreview = formatReturnPreview(
+    val returnPreview = OutputFormatter.format(
         output = output,
         returnMode = returnMode
     )
 
-    val appearancePreview = OdkIntentBuilder.buildAppearanceColumnValue(
-        capability = capability,
-        settingsState = settingsState,
-        returnMode = returnMode
-    )
-
-    val intentColumnPreview = OdkIntentBuilder.buildIntentColumnValue(
-        capability = capability,
-        settingsState = settingsState,
-        returnMode = returnMode
-    )
-
-    val androidIntentPreview = OdkIntentBuilder.buildAndroidIntentUri(
-        capability = capability,
-        settingsState = settingsState,
-        returnMode = returnMode
-    )
-
-    val kotlinIntentPreview = OdkIntentBuilder.buildKotlinIntentSnippet(
-        capability = capability,
-        settingsState = settingsState,
-        returnMode = returnMode
-    )
-
     val launchPreview = when (launchTarget) {
-        "appearance" -> appearancePreview
-        "intent_column" -> intentColumnPreview
-        "android_intent" -> androidIntentPreview
-        "kotlin_intent" -> kotlinIntentPreview
-        else -> appearancePreview
+        LaunchTarget.Appearance -> OdkAppearanceBuilder.build(
+            capability = capability,
+            settingsState = settingsState,
+            returnMode = returnMode
+        )
+
+        LaunchTarget.IntentColumn -> OdkIntentColumnBuilder.build(
+            capability = capability,
+            settingsState = settingsState,
+            returnMode = returnMode
+        )
+
+        LaunchTarget.AndroidIntentUri -> AndroidIntentUriBuilder.build(
+            capability = capability,
+            settingsState = settingsState,
+            returnMode = returnMode
+        )
+
+        LaunchTarget.KotlinIntent -> KotlinIntentSnippetBuilder.build(
+            capability = capability,
+            settingsState = settingsState,
+            returnMode = returnMode
+        )
     }
 
     Column(
@@ -170,17 +169,17 @@ private fun CapabilityOutputPanel(
             modifier = Modifier.padding(top = 6.dp)
         ) {
             Row {
-                ModeButton("Single", "single", returnMode) { returnMode = it }
+                ModeButton(ReturnMode.Single.label, ReturnMode.Single, returnMode) { returnMode = it }
                 Spacer(Modifier.width(6.dp))
-                ModeButton("Fields", "fields", returnMode) { returnMode = it }
+                ModeButton(ReturnMode.Fields.label, ReturnMode.Fields, returnMode) { returnMode = it }
             }
 
             Row(
                 modifier = Modifier.padding(top = 6.dp)
             ) {
-                ModeButton("JSON", "json", returnMode) { returnMode = it }
+                ModeButton(ReturnMode.Json.label, ReturnMode.Json, returnMode) { returnMode = it }
                 Spacer(Modifier.width(6.dp))
-                ModeButton("Datapoints", "datapoints", returnMode) { returnMode = it }
+                ModeButton(ReturnMode.Datapoints.label, ReturnMode.Datapoints, returnMode) { returnMode = it }
             }
         }
 
@@ -190,20 +189,22 @@ private fun CapabilityOutputPanel(
             fontWeight = FontWeight.Bold
         )
 
-        Row(
+        Column(
             modifier = Modifier.padding(top = 6.dp)
         ) {
-            ModeButton("Appearance", "appearance", launchTarget) { launchTarget = it }
-            Spacer(Modifier.width(6.dp))
-            ModeButton("Intent column", "intent_column", launchTarget) { launchTarget = it }
-        }
+            Row {
+                ModeButton(LaunchTarget.Appearance.label, LaunchTarget.Appearance, launchTarget) { launchTarget = it }
+                Spacer(Modifier.width(6.dp))
+                ModeButton(LaunchTarget.IntentColumn.label, LaunchTarget.IntentColumn, launchTarget) { launchTarget = it }
+            }
 
-        Row(
-            modifier = Modifier.padding(top = 6.dp)
-        ) {
-            ModeButton("Android URI", "android_intent", launchTarget) { launchTarget = it }
-            Spacer(Modifier.width(6.dp))
-            ModeButton("Kotlin", "kotlin_intent", launchTarget) { launchTarget = it }
+            Row(
+                modifier = Modifier.padding(top = 6.dp)
+            ) {
+                ModeButton(LaunchTarget.AndroidIntentUri.label, LaunchTarget.AndroidIntentUri, launchTarget) { launchTarget = it }
+                Spacer(Modifier.width(6.dp))
+                ModeButton(LaunchTarget.KotlinIntent.label, LaunchTarget.KotlinIntent, launchTarget) { launchTarget = it }
+            }
         }
 
         Text(
@@ -255,11 +256,11 @@ private fun CapabilityOutputPanel(
 }
 
 @Composable
-private fun ModeButton(
+private fun <T> ModeButton(
     label: String,
-    value: String,
-    selectedValue: String,
-    onSelected: (String) -> Unit
+    value: T,
+    selectedValue: T,
+    onSelected: (T) -> Unit
 ) {
     Button(
         onClick = {
@@ -268,37 +269,5 @@ private fun ModeButton(
         enabled = value != selectedValue
     ) {
         Text(label)
-    }
-}
-
-private fun formatReturnPreview(
-    output: CapabilityOutput,
-    returnMode: String
-): String {
-    return when (returnMode) {
-        "single" -> output.fields.values.firstOrNull()?.toString() ?: ""
-        "fields" -> output.fields.entries.joinToString("\n") { (key, value) ->
-            "$key=$value"
-        }
-        "json" -> output.fields.entries.joinToString(
-            prefix = "{\n",
-            separator = ",\n",
-            postfix = "\n}"
-        ) { (key, value) ->
-            "  \"$key\": ${formatJsonValue(value)}"
-        }
-        "datapoints" -> output.fields.entries.mapIndexed { index, entry ->
-            "${index + 1},${entry.key},${entry.value}"
-        }.joinToString("\n")
-        else -> output.fields.toString()
-    }
-}
-
-private fun formatJsonValue(value: Any?): String {
-    return when (value) {
-        null -> "null"
-        is Number -> value.toString()
-        is Boolean -> value.toString()
-        else -> "\"${value.toString().replace("\"", "\\\"")}\""
     }
 }
