@@ -1,0 +1,584 @@
+package com.example.xlsformlab.modules.gpstargetnavigator
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.PackageManager
+import android.location.Location
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.CapabilityCategory
+import com.example.xlsformlab.core.CapabilityField
+import com.example.xlsformlab.core.CapabilityFieldType
+import com.example.xlsformlab.core.CapabilityManifest
+import com.example.xlsformlab.core.CapabilityOutput
+import com.example.xlsformlab.core.CapabilityOutputSchema
+import com.example.xlsformlab.core.CapabilityRequest
+import com.example.xlsformlab.core.CapabilityResult
+import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.SettingsState
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import kotlin.math.roundToInt
+
+class GpsTargetNavigatorCapability : Capability {
+
+    override val manifest = CapabilityManifest(
+        id = "gps_target_navigator",
+        name = "GPS Target Navigator",
+        description = "Guide the user towards a target GPS coordinate and return distance, bearing and arrival status.",
+        version = "0.2.0",
+        category = CapabilityCategory.Mapping,
+        status = CapabilityStatus.Experimental
+    )
+
+    override val settings = listOf(
+        CapabilitySetting.TextSetting(
+            id = "target_name",
+            label = "Target name",
+            group = "Target",
+            defaultValue = "Target location"
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "target_latitude",
+            label = "Target latitude",
+            group = "Target",
+            defaultValue = 0f,
+            minimum = -90f,
+            maximum = 90f,
+            step = 0.0001f,
+            decimals = 6
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "target_longitude",
+            label = "Target longitude",
+            group = "Target",
+            defaultValue = 0f,
+            minimum = -180f,
+            maximum = 180f,
+            step = 0.0001f,
+            decimals = 6
+        ),
+        CapabilitySetting.FloatSetting(
+            id = "arrival_radius_m",
+            label = "Arrival radius",
+            group = "Target",
+            defaultValue = 10f,
+            minimum = 1f,
+            maximum = 500f,
+            step = 1f,
+            unit = "m",
+            decimals = 0
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_current_location",
+            label = "Show current location",
+            group = "Display",
+            defaultValue = true
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_bearing",
+            label = "Show bearing",
+            group = "Display",
+            defaultValue = true
+        ),
+        CapabilitySetting.BooleanSetting(
+            id = "show_distance",
+            label = "Show distance",
+            group = "Display",
+            defaultValue = true
+        )
+    )
+
+    override val outputSchema = CapabilityOutputSchema(
+        fields = listOf(
+            CapabilityField("target_name", "Target name", CapabilityFieldType.Text, required = false),
+            CapabilityField("target_latitude", "Target latitude", CapabilityFieldType.Float, required = true),
+            CapabilityField("target_longitude", "Target longitude", CapabilityFieldType.Float, required = true),
+            CapabilityField("current_latitude", "Current latitude", CapabilityFieldType.Float, required = false),
+            CapabilityField("current_longitude", "Current longitude", CapabilityFieldType.Float, required = false),
+            CapabilityField("accuracy_m", "Accuracy metres", CapabilityFieldType.Float, required = false),
+            CapabilityField("distance_m", "Distance metres", CapabilityFieldType.Float, required = false),
+            CapabilityField("bearing_deg", "Bearing degrees", CapabilityFieldType.Float, required = false),
+            CapabilityField("arrived", "Arrived", CapabilityFieldType.Boolean, required = true),
+            CapabilityField("timestamp_ms", "Timestamp milliseconds", CapabilityFieldType.Text, required = false),
+            CapabilityField("update_count", "Location update count", CapabilityFieldType.Integer, required = false),
+            CapabilityField("status", "Status", CapabilityFieldType.Text, required = false)
+        )
+    )
+
+    @Composable
+    override fun Demo(settingsState: SettingsState) {
+        val context = LocalContext.current
+        var hasLocationPermission by remember {
+            mutableStateOf(hasLocationPermission(context))
+        }
+        var statusText by remember {
+            mutableStateOf("Waiting for location permission")
+        }
+        var updateCount by remember {
+            mutableIntStateOf(0)
+        }
+
+        val lifecycleOwner = LocalLifecycleOwner.current
+
+        DisposableEffect(lifecycleOwner, context) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    hasLocationPermission = hasLocationPermission(context)
+                    if (hasLocationPermission && updateCount == 0) {
+                        statusText = "Location permission granted. Starting live updates."
+                    }
+                }
+            }
+
+            lifecycleOwner.lifecycle.addObserver(observer)
+
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+
+        val targetLatitude = settingsState.getFloat("target_latitude").toDouble()
+        val targetLongitude = settingsState.getFloat("target_longitude").toDouble()
+        val arrivalRadius = settingsState.getFloat("arrival_radius_m")
+
+        FusedLocationUpdates(
+            enabled = hasLocationPermission,
+            settingsState = settingsState,
+            targetLatitude = targetLatitude,
+            targetLongitude = targetLongitude,
+            arrivalRadius = arrivalRadius,
+            onStatus = { statusText = it },
+            onUpdateCount = { updateCount = it }
+        )
+
+        val currentLatitude = settingsState.getFloat("current_latitude")
+        val currentLongitude = settingsState.getFloat("current_longitude")
+        val accuracy = settingsState.getFloat("accuracy_m")
+        val distance = settingsState.getFloat("distance_m")
+        val bearing = settingsState.getFloat("bearing_deg")
+        val arrived = settingsState.getBoolean("arrived")
+
+        LaunchedEffect(targetLatitude, targetLongitude, arrivalRadius, currentLatitude, currentLongitude) {
+            if (currentLatitude != 0f || currentLongitude != 0f) {
+                updateNavigationState(
+                    settingsState = settingsState,
+                    currentLatitude = currentLatitude.toDouble(),
+                    currentLongitude = currentLongitude.toDouble(),
+                    accuracy = accuracy,
+                    targetLatitude = targetLatitude,
+                    targetLongitude = targetLongitude,
+                    arrivalRadius = arrivalRadius
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = settingsState.getString("target_name"),
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(statusText)
+
+            if (!hasLocationPermission) {
+                Button(
+                    modifier = Modifier.padding(top = 8.dp),
+                    onClick = {
+                        val activity = context.findActivity()
+                        if (activity != null) {
+                            ActivityCompat.requestPermissions(
+                                activity,
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                ),
+                                LOCATION_PERMISSION_REQUEST_CODE
+                            )
+                            statusText = "Location permission requested."
+                        } else {
+                            statusText = "Could not request permission: no Activity context available."
+                        }
+                    }
+                ) {
+                    Text("Grant location permission")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            CompassPreview(
+                bearingDegrees = bearing,
+                arrived = arrived
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (settingsState.getBoolean("show_distance")) {
+                Text(
+                    text = if (distance > 0f) {
+                        "Distance: ${formatDistance(distance)}"
+                    } else {
+                        "Distance: waiting for GPS"
+                    },
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            if (settingsState.getBoolean("show_bearing")) {
+                Text("Bearing: ${bearing.roundToInt()}°")
+            }
+
+            Text(
+                text = if (arrived) {
+                    "Arrived: within ${arrivalRadius.roundToInt()} m"
+                } else {
+                    "Not arrived"
+                },
+                fontWeight = FontWeight.SemiBold
+            )
+
+            if (settingsState.getBoolean("show_current_location")) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Current latitude: ${formatCoordinate(currentLatitude)}", fontFamily = FontFamily.Monospace)
+                Text("Current longitude: ${formatCoordinate(currentLongitude)}", fontFamily = FontFamily.Monospace)
+                Text("Accuracy: ${accuracy.roundToInt()} m", fontFamily = FontFamily.Monospace)
+                Text("Updates: $updateCount", fontFamily = FontFamily.Monospace)
+                Text("Timestamp: ${settingsState.getString("timestamp_ms")}", fontFamily = FontFamily.Monospace)
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    @Composable
+    private fun FusedLocationUpdates(
+        enabled: Boolean,
+        settingsState: SettingsState,
+        targetLatitude: Double,
+        targetLongitude: Double,
+        arrivalRadius: Float,
+        onStatus: (String) -> Unit,
+        onUpdateCount: (Int) -> Unit
+    ) {
+        val context = LocalContext.current
+
+        DisposableEffect(enabled, targetLatitude, targetLongitude, arrivalRadius) {
+            if (!enabled) {
+                onDispose { }
+            } else {
+                val fusedLocationClient: FusedLocationProviderClient =
+                    LocationServices.getFusedLocationProviderClient(context)
+
+                var updateCount = 0
+
+                val locationRequest = LocationRequest.Builder(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    1000L
+                )
+                    .setMinUpdateIntervalMillis(500L)
+                    .setMaxUpdateDelayMillis(1000L)
+                    .setWaitForAccurateLocation(false)
+                    .build()
+
+                val callback = object : LocationCallback() {
+                    override fun onLocationResult(locationResult: LocationResult) {
+                        val location = locationResult.lastLocation ?: return
+                        updateCount += 1
+
+                        updateNavigationState(
+                            settingsState = settingsState,
+                            currentLatitude = location.latitude,
+                            currentLongitude = location.longitude,
+                            accuracy = if (location.hasAccuracy()) location.accuracy else 0f,
+                            targetLatitude = targetLatitude,
+                            targetLongitude = targetLongitude,
+                            arrivalRadius = arrivalRadius
+                        )
+
+                        settingsState.setFloat("update_count", updateCount.toFloat())
+                        onUpdateCount(updateCount)
+                        onStatus("Live location update #$updateCount")
+                    }
+                }
+
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location ->
+                        if (location != null) {
+                            updateNavigationState(
+                                settingsState = settingsState,
+                                currentLatitude = location.latitude,
+                                currentLongitude = location.longitude,
+                                accuracy = if (location.hasAccuracy()) location.accuracy else 0f,
+                                targetLatitude = targetLatitude,
+                                targetLongitude = targetLongitude,
+                                arrivalRadius = arrivalRadius
+                            )
+                            onStatus("Loaded last known location. Waiting for live updates.")
+                        } else {
+                            onStatus("Waiting for first live location update.")
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        onStatus("Last location unavailable: ${exception.message ?: "unknown error"}")
+                    }
+
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    callback,
+                    context.mainLooper
+                ).addOnSuccessListener {
+                    onStatus("Live high-accuracy location updates started.")
+                }.addOnFailureListener { exception ->
+                    onStatus("Could not start live updates: ${exception.message ?: "unknown error"}")
+                }
+
+                onDispose {
+                    fusedLocationClient.removeLocationUpdates(callback)
+                }
+            }
+        }
+    }
+
+    override fun buildOutput(
+        settingsState: SettingsState
+    ): CapabilityOutput {
+        val targetLatitude = settingsState.getFloat("target_latitude")
+        val targetLongitude = settingsState.getFloat("target_longitude")
+        val currentLatitude = settingsState.getFloat("current_latitude")
+        val currentLongitude = settingsState.getFloat("current_longitude")
+        val arrivalRadius = settingsState.getFloat("arrival_radius_m")
+
+        if (currentLatitude != 0f || currentLongitude != 0f) {
+            updateNavigationState(
+                settingsState = settingsState,
+                currentLatitude = currentLatitude.toDouble(),
+                currentLongitude = currentLongitude.toDouble(),
+                accuracy = settingsState.getFloat("accuracy_m"),
+                targetLatitude = targetLatitude.toDouble(),
+                targetLongitude = targetLongitude.toDouble(),
+                arrivalRadius = arrivalRadius
+            )
+        }
+
+        return CapabilityOutput(
+            fields = mapOf(
+                "target_name" to settingsState.getString("target_name"),
+                "target_latitude" to targetLatitude,
+                "target_longitude" to targetLongitude,
+                "current_latitude" to currentLatitude,
+                "current_longitude" to currentLongitude,
+                "accuracy_m" to settingsState.getFloat("accuracy_m"),
+                "distance_m" to settingsState.getFloat("distance_m"),
+                "bearing_deg" to settingsState.getFloat("bearing_deg"),
+                "arrived" to settingsState.getBoolean("arrived"),
+                "timestamp_ms" to settingsState.getString("timestamp_ms"),
+                "update_count" to settingsState.getFloat("update_count"),
+                "status" to settingsState.getString("status")
+            )
+        )
+    }
+
+    @Composable
+    override fun Help() {
+        Text(
+            "GPS Target Navigator guides the user towards a configured latitude and longitude. " +
+                "It uses high-accuracy fused location updates while the capability is visible. " +
+                "Compass heading, AR overlay and map view can be added in later patches."
+        )
+    }
+
+    override fun execute(
+        request: CapabilityRequest
+    ): CapabilityResult {
+        return CapabilityResult(success = true)
+    }
+
+    private fun updateNavigationState(
+        settingsState: SettingsState,
+        currentLatitude: Double,
+        currentLongitude: Double,
+        accuracy: Float,
+        targetLatitude: Double,
+        targetLongitude: Double,
+        arrivalRadius: Float
+    ) {
+        val result = distanceAndBearing(
+            currentLatitude = currentLatitude,
+            currentLongitude = currentLongitude,
+            targetLatitude = targetLatitude,
+            targetLongitude = targetLongitude
+        )
+
+        settingsState.setFloat("current_latitude", currentLatitude.toFloat())
+        settingsState.setFloat("current_longitude", currentLongitude.toFloat())
+        settingsState.setFloat("accuracy_m", accuracy)
+        settingsState.setFloat("distance_m", result.distanceMeters)
+        settingsState.setFloat("bearing_deg", result.initialBearingDegrees)
+        settingsState.setBoolean("arrived", result.distanceMeters <= arrivalRadius)
+        settingsState.setString("timestamp_ms", System.currentTimeMillis().toString())
+        settingsState.setString("status", "updated")
+    }
+
+    private fun distanceAndBearing(
+        currentLatitude: Double,
+        currentLongitude: Double,
+        targetLatitude: Double,
+        targetLongitude: Double
+    ): NavigationResult {
+        val result = FloatArray(3)
+        Location.distanceBetween(
+            currentLatitude,
+            currentLongitude,
+            targetLatitude,
+            targetLongitude,
+            result
+        )
+
+        val bearing = ((result[1] % 360f) + 360f) % 360f
+        return NavigationResult(
+            distanceMeters = result[0],
+            initialBearingDegrees = bearing
+        )
+    }
+
+    private fun hasLocationPermission(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @Composable
+    private fun CompassPreview(
+        bearingDegrees: Float,
+        arrived: Boolean
+    ) {
+        Canvas(
+            modifier = Modifier
+                .size(180.dp)
+                .padding(8.dp)
+        ) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val radius = size.minDimension / 2f - 10.dp.toPx()
+
+            drawCircle(
+                color = Color.Black,
+                radius = radius,
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 3.dp.toPx()
+                )
+            )
+
+            val northLength = radius * 0.85f
+            drawLine(
+                color = Color.Gray,
+                start = center,
+                end = Offset(center.x, center.y - northLength),
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+
+            rotate(degrees = bearingDegrees, pivot = center) {
+                drawLine(
+                    color = if (arrived) Color(0xFF2E7D32) else Color.Black,
+                    start = center,
+                    end = Offset(center.x, center.y - northLength),
+                    strokeWidth = 8.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Text("N")
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+
+    private fun formatDistance(distanceMeters: Float): String {
+        return if (distanceMeters >= 1000f) {
+            "%.2f km".format(distanceMeters / 1000f)
+        } else {
+            "${distanceMeters.roundToInt()} m"
+        }
+    }
+
+    private fun formatCoordinate(value: Float): String {
+        return if (value == 0f) {
+            "waiting"
+        } else {
+            "%.6f".format(value)
+        }
+    }
+
+    private data class NavigationResult(
+        val distanceMeters: Float,
+        val initialBearingDegrees: Float
+    )
+
+    private fun Context.findActivity(): Activity? {
+        var currentContext = this
+        while (currentContext is ContextWrapper) {
+            if (currentContext is Activity) {
+                return currentContext
+            }
+            currentContext = currentContext.baseContext
+        }
+        return null
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    }
+}
