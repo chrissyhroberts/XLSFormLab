@@ -12,6 +12,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.settings.SettingsRepository
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.LaunchTarget
 import com.example.xlsformlab.transport.OutputFormatter
@@ -38,7 +40,24 @@ fun CapabilityCard(
     modifier: Modifier = Modifier
 ) {
     val settingsState = remember(capability.manifest.id) {
-        SettingsState(capability.settings)
+        SettingsState(
+            settings = capability.settings,
+            onValueChanged = { settingId, value ->
+                SettingsRepository.save(
+                    capabilityId = capability.manifest.id,
+                    settingId = settingId,
+                    value = value
+                )
+            }
+        )
+    }
+
+    LaunchedEffect(capability.manifest.id) {
+        val restoredSettings = SettingsRepository.load(
+            capabilityId = capability.manifest.id,
+            settings = capability.settings
+        )
+        settingsState.restore(restoredSettings)
     }
 
     ElevatedCard(
