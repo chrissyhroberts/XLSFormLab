@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,29 +55,32 @@ fun SettingsRenderer(
                 }
 
                 is CapabilitySetting.FloatSetting -> {
-                    Text(
-                        text = "${setting.label}: ${"%.1f".format(settingsState.getFloat(setting.id))}",
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-
-                    Slider(
+                    NumericSettingField(
+                        label = setting.label,
                         value = settingsState.getFloat(setting.id),
-                        onValueChange = { settingsState.setFloat(setting.id, it) },
-                        valueRange = (setting.minimum ?: 0f)..(setting.maximum ?: 100f)
+                        minimum = setting.minimum ?: 0f,
+                        maximum = setting.maximum ?: 100f,
+                        step = setting.step,
+                        unit = setting.unit,
+                        decimals = setting.decimals,
+                        onValueChange = {
+                            settingsState.setFloat(setting.id, it)
+                        }
                     )
                 }
 
                 is CapabilitySetting.IntSetting -> {
-                    Text(
-                        text = "${setting.label}: ${settingsState.getInt(setting.id)}",
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-
-                    Slider(
+                    NumericSettingField(
+                        label = setting.label,
                         value = settingsState.getInt(setting.id).toFloat(),
-                        onValueChange = { settingsState.setInt(setting.id, it.toInt()) },
-                        valueRange = (setting.minimum ?: 0).toFloat()..
-                            (setting.maximum ?: 100).toFloat()
+                        minimum = (setting.minimum ?: 0).toFloat(),
+                        maximum = (setting.maximum ?: 100).toFloat(),
+                        step = setting.step.toFloat(),
+                        unit = setting.unit,
+                        decimals = 0,
+                        onValueChange = {
+                            settingsState.setInt(setting.id, it.toInt())
+                        }
                     )
                 }
 

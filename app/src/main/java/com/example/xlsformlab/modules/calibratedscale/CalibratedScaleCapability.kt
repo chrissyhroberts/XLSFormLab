@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.xlsformlab.calibration.CalibrationRepository
 import com.example.xlsformlab.core.Capability
 import com.example.xlsformlab.core.CapabilityCategory
 import com.example.xlsformlab.core.CapabilityManifest
@@ -36,8 +37,7 @@ import com.example.xlsformlab.settings.SettingsState
 
 class CalibratedScaleCapability : Capability {
 
-    private val temporaryDpPerMm = 3.0f
-
+    
     override val manifest = CapabilityManifest(
         id = "calibrated_scale",
         name = "Calibrated Scale",
@@ -71,7 +71,7 @@ class CalibratedScaleCapability : Capability {
         }
         val useRange = settingsState.getBoolean("use_range")
         val vasLengthMm = settingsState.getFloat("vas_length_mm").coerceIn(40f, 200f)
-        val desiredLength = vasLengthMm.dp * temporaryDpPerMm
+        val desiredLength = vasLengthMm.dp * CalibrationRepository.current().dpPerMm
         val showEndpointLabels = settingsState.getBoolean("show_endpoint_labels")
         val showCurrentValue = settingsState.getBoolean("show_current_score")
         val verticalMode = settingsState.getBoolean("vertical_mode")
