@@ -52,6 +52,7 @@ import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
 import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsState
+import com.example.xlsformlab.platform.sensors.PhoneSensorRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -139,6 +140,8 @@ class GpsTargetNavigatorCapability : Capability {
             CapabilityField("accuracy_m", "Accuracy metres", CapabilityFieldType.Float, required = false),
             CapabilityField("distance_m", "Distance metres", CapabilityFieldType.Float, required = false),
             CapabilityField("bearing_deg", "Bearing degrees", CapabilityFieldType.Float, required = false),
+            CapabilityField("heading_deg", "Heading degrees", CapabilityFieldType.Float, required = false),
+            CapabilityField("relative_bearing_deg", "Relative bearing degrees", CapabilityFieldType.Float, required = false),
             CapabilityField("arrived", "Arrived", CapabilityFieldType.Boolean, required = true),
             CapabilityField("timestamp_ms", "Timestamp milliseconds", CapabilityFieldType.Text, required = false),
             CapabilityField("update_count", "Location update count", CapabilityFieldType.Integer, required = false),
@@ -178,6 +181,13 @@ class GpsTargetNavigatorCapability : Capability {
             }
         }
 
+        DisposableEffect(context) {
+            PhoneSensorRepository.start(context)
+            onDispose {
+                PhoneSensorRepository.stop()
+            }
+        }
+
         val targetLatitude = settingsState.getFloat("target_latitude").toDouble()
         val targetLongitude = settingsState.getFloat("target_longitude").toDouble()
         val arrivalRadius = settingsState.getFloat("arrival_radius_m")
@@ -197,6 +207,14 @@ class GpsTargetNavigatorCapability : Capability {
         val accuracy = settingsState.getFloat("accuracy_m")
         val distance = settingsState.getFloat("distance_m")
         val bearing = settingsState.getFloat("bearing_deg")
+        val heading = PhoneSensorRepository.headingDegrees
+        val relativeBearing = if (heading != null) {
+            relativeBearingDegrees(bearing, heading)
+        } else {
+            bearing
+        }
+        settingsState.setFloat("heading_deg", heading ?: 0f)
+        settingsState.setFloat("relative_bearing_deg", relativeBearing)
         val arrived = settingsState.getBoolean("arrived")
 
         LaunchedEffect(targetLatitude, targetLongitude, arrivalRadius, currentLatitude, currentLongitude) {
@@ -251,6 +269,8 @@ class GpsTargetNavigatorCapability : Capability {
 
             CompassPreview(
                 bearingDegrees = bearing,
+                headingDegrees = heading,
+                relativeBearingDegrees = relativeBearing,
                 arrived = arrived
             )
 
@@ -269,6 +289,8 @@ class GpsTargetNavigatorCapability : Capability {
 
             if (settingsState.getBoolean("show_bearing")) {
                 Text("Bearing: ${bearing.roundToInt()}°")
+                Text("Heading: ${heading?.roundToInt()?.toString() ?: "waiting"}°")
+                Text("Turn: ${relativeBearing.roundToInt()}°")
             }
 
             Text(
@@ -412,6 +434,8 @@ class GpsTargetNavigatorCapability : Capability {
                 "accuracy_m" to settingsState.getFloat("accuracy_m"),
                 "distance_m" to settingsState.getFloat("distance_m"),
                 "bearing_deg" to settingsState.getFloat("bearing_deg"),
+                "heading_deg" to settingsState.getFloat("heading_deg"),
+                "relative_bearing_deg" to settingsState.getFloat("relative_bearing_deg"),
                 "arrived" to settingsState.getBoolean("arrived"),
                 "timestamp_ms" to settingsState.getString("timestamp_ms"),
                 "update_count" to settingsState.getFloat("update_count"),
@@ -497,6 +521,8 @@ class GpsTargetNavigatorCapability : Capability {
     @Composable
     private fun CompassPreview(
         bearingDegrees: Float,
+        headingDegrees: Float?,
+        relativeBearingDegrees: Float,
         arrived: Boolean
     ) {
         Canvas(
@@ -525,7 +551,7 @@ class GpsTargetNavigatorCapability : Capability {
                 cap = StrokeCap.Round
             )
 
-            rotate(degrees = bearingDegrees, pivot = center) {
+            rotate(degrees = relativeBearingDegrees, pivot = center) {
                 drawLine(
                     color = if (arrived) Color(0xFF2E7D32) else Color.Black,
                     start = center,
@@ -541,7 +567,7 @@ class GpsTargetNavigatorCapability : Capability {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            Text("N")
+            Text("Target ${bearingDegrees.roundToInt()}° • Heading ${headingDegrees?.roundToInt()?.toString() ?: "waiting"}°")
             Spacer(modifier = Modifier.weight(1f))
         }
     }
@@ -560,6 +586,16 @@ class GpsTargetNavigatorCapability : Capability {
         } else {
             "%.6f".format(value)
         }
+    }
+
+    private fun relativeBearingDegrees(
+        bearingDegrees: Float,
+        headingDegrees: Float
+    ): Float {
+        var relative = bearingDegrees - headingDegrees
+        while (relative > 180f) relative -= 360f
+        while (relative < -180f) relative += 360f
+        return relative
     }
 
     private data class NavigationResult(

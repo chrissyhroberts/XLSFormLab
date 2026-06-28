@@ -29,6 +29,7 @@ import com.example.xlsformlab.calibration.CalibrationScreen
 import com.example.xlsformlab.core.CapabilityCategory
 import com.example.xlsformlab.core.CapabilityRegistry
 import com.example.xlsformlab.ui.components.CapabilityCard
+import com.example.xlsformlab.ui.sensors.SensorDashboard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +50,10 @@ fun HomeScreen() {
         ) {
             item {
                 CalibrationCard()
+            }
+
+            item {
+                SensorDashboardCard()
             }
 
             items(CapabilityCategory.entries) { category ->
@@ -95,6 +100,49 @@ private fun CalibrationCard() {
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
                 CalibrationScreen()
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun SensorDashboardCard() {
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        elevation = CardDefaults.elevatedCardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        expanded = !expanded
+                    }
+            ) {
+                Text(
+                    text = if (expanded) {
+                        "▼ Device sensors"
+                    } else {
+                        "▶ Device sensors"
+                    },
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (expanded) {
+                Spacer(Modifier.height(12.dp))
+                SensorDashboard()
             }
         }
     }
