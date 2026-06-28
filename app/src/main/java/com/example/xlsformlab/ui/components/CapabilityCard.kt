@@ -76,7 +76,10 @@ fun CapabilityCard(
             ExpandableSection(
                 title = "Output"
             ) {
-                Text("Output preview coming soon")
+                val output = capability.buildOutput(settingsState)
+                output.fields.forEach { (key, value) ->
+                    Text("$key = $value")
+                }
             }
 
             ExpandableSection(
