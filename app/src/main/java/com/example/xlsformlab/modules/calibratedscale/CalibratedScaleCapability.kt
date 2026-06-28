@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +36,8 @@ import com.example.xlsformlab.settings.SettingsState
 
 class CalibratedScaleCapability : Capability {
 
+    private val temporaryDpPerMm = 3.0f
+
     override val manifest = CapabilityManifest(
         id = "calibrated_scale",
         name = "Calibrated Scale",
@@ -45,6 +48,7 @@ class CalibratedScaleCapability : Capability {
     )
 
     override val settings = listOf(
+        CapabilitySetting.FloatSetting("vas_length_mm", "VAS length (mm)", defaultValue = 100f, minimum = 40f, maximum = 200f),
         CapabilitySetting.TextSetting("prompt", "Prompt", defaultValue = "Rate your pain"),
         CapabilitySetting.FloatSetting("minimum", "Minimum value", defaultValue = 0f, minimum = 0f, maximum = 100f),
         CapabilitySetting.FloatSetting("maximum", "Maximum value", defaultValue = 100f, minimum = 0f, maximum = 100f),
@@ -54,20 +58,22 @@ class CalibratedScaleCapability : Capability {
         CapabilitySetting.FloatSetting("value", "Current value", defaultValue = 50f, minimum = 0f, maximum = 100f),
         CapabilitySetting.FloatSetting("lower_value", "Lower selected value", defaultValue = 25f, minimum = 0f, maximum = 100f),
         CapabilitySetting.FloatSetting("upper_value", "Upper selected value", defaultValue = 75f, minimum = 0f, maximum = 100f),
-        CapabilitySetting.IntSetting("display_scale_percent", "Display scale (%)", defaultValue = 100, minimum = 50, maximum = 200),
         CapabilitySetting.BooleanSetting("show_endpoint_labels", "Show endpoint labels", defaultValue = true),
-        CapabilitySetting.BooleanSetting("show_current_score", "Show current score", defaultValue = true),
+        CapabilitySetting.BooleanSetting("show_current_score", "Show current value", defaultValue = true),
         CapabilitySetting.BooleanSetting("vertical_mode", "Vertical mode", defaultValue = false)
     )
 
     @Composable
     override fun Demo(settingsState: SettingsState) {
         val minimum = settingsState.getFloat("minimum")
-        val maximum = settingsState.getFloat("maximum")
+        val maximum = settingsState.getFloat("maximum").let {
+            if (it > minimum) it else minimum + 1f
+        }
         val useRange = settingsState.getBoolean("use_range")
-        val displayScale = settingsState.getInt("display_scale_percent").coerceIn(50, 200) / 100f
+        val vasLengthMm = settingsState.getFloat("vas_length_mm").coerceIn(40f, 200f)
+        val desiredLength = vasLengthMm.dp * temporaryDpPerMm
         val showEndpointLabels = settingsState.getBoolean("show_endpoint_labels")
-        val showCurrentScore = settingsState.getBoolean("show_current_score")
+        val showCurrentValue = settingsState.getBoolean("show_current_score")
         val verticalMode = settingsState.getBoolean("vertical_mode")
 
         normaliseRangeValues(settingsState, minimum, maximum)
@@ -82,7 +88,7 @@ class CalibratedScaleCapability : Capability {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 420.dp * displayScale),
+                            .heightIn(min = desiredLength + 170.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.Top
                     ) {
@@ -92,9 +98,9 @@ class CalibratedScaleCapability : Capability {
                             settingsState = settingsState,
                             scaleMinimum = minimum,
                             scaleMaximum = maximum,
-                            displayScale = displayScale,
+                            desiredLength = desiredLength,
                             showEndpointLabels = showEndpointLabels,
-                            showCurrentScore = showCurrentScore,
+                            showCurrentValue = showCurrentValue,
                             vertical = true,
                             onValueChange = { proposed ->
                                 val upper = settingsState.getFloat("upper_value")
@@ -108,9 +114,9 @@ class CalibratedScaleCapability : Capability {
                             settingsState = settingsState,
                             scaleMinimum = minimum,
                             scaleMaximum = maximum,
-                            displayScale = displayScale,
+                            desiredLength = desiredLength,
                             showEndpointLabels = showEndpointLabels,
-                            showCurrentScore = showCurrentScore,
+                            showCurrentValue = showCurrentValue,
                             vertical = true,
                             onValueChange = { proposed ->
                                 val lower = settingsState.getFloat("lower_value")
@@ -126,9 +132,9 @@ class CalibratedScaleCapability : Capability {
                             settingsState = settingsState,
                             scaleMinimum = minimum,
                             scaleMaximum = maximum,
-                            displayScale = displayScale,
+                            desiredLength = desiredLength,
                             showEndpointLabels = showEndpointLabels,
-                            showCurrentScore = showCurrentScore,
+                            showCurrentValue = showCurrentValue,
                             vertical = false,
                             onValueChange = { proposed ->
                                 val upper = settingsState.getFloat("upper_value")
@@ -142,9 +148,9 @@ class CalibratedScaleCapability : Capability {
                             settingsState = settingsState,
                             scaleMinimum = minimum,
                             scaleMaximum = maximum,
-                            displayScale = displayScale,
+                            desiredLength = desiredLength,
                             showEndpointLabels = showEndpointLabels,
-                            showCurrentScore = showCurrentScore,
+                            showCurrentValue = showCurrentValue,
                             vertical = false,
                             onValueChange = { proposed ->
                                 val lower = settingsState.getFloat("lower_value")
@@ -160,9 +166,9 @@ class CalibratedScaleCapability : Capability {
                     settingsState = settingsState,
                     scaleMinimum = minimum,
                     scaleMaximum = maximum,
-                    displayScale = displayScale,
+                    desiredLength = desiredLength,
                     showEndpointLabels = showEndpointLabels,
-                    showCurrentScore = showCurrentScore,
+                    showCurrentValue = showCurrentValue,
                     vertical = verticalMode,
                     onValueChange = { proposed ->
                         settingsState.setFloat("value", proposed.coerceIn(minimum, maximum))
@@ -196,96 +202,111 @@ class CalibratedScaleCapability : Capability {
         settingsState: SettingsState,
         scaleMinimum: Float,
         scaleMaximum: Float,
-        displayScale: Float,
+        desiredLength: Dp,
         showEndpointLabels: Boolean,
-        showCurrentScore: Boolean,
+        showCurrentValue: Boolean,
         vertical: Boolean,
         onValueChange: (Float) -> Unit
     ) {
         val current = settingsState.getFloat(valueId).coerceIn(scaleMinimum, scaleMaximum)
-        val scaleLength = 280.dp * displayScale
 
-        Column(
+        BoxWithConstraints(
             modifier = if (vertical) {
                 Modifier
-                    .height(scaleLength + 170.dp)
+                    .width(150.dp)
+                    .height(desiredLength + 170.dp)
                     .padding(8.dp)
             } else {
                 Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-            },
-            horizontalAlignment = Alignment.CenterHorizontally
+            }
         ) {
-            Column(
-                modifier = Modifier
-                    .height(72.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = label,
-                    textAlign = TextAlign.Center,
-                    maxLines = 3
-                )
-
-                if (showCurrentScore) {
-                    Text(
-                        text = "Score: ${current.toInt()}",
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+            val availableLength = if (vertical) {
+                desiredLength
+            } else {
+                minOf(desiredLength, maxWidth - 16.dp)
             }
 
-            if (vertical) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = if (vertical) {
+                    Modifier.width(150.dp)
+                } else {
+                    Modifier.fillMaxWidth()
+                }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .height(84.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    if (showEndpointLabels) {
-                        Column(
-                            modifier = Modifier
-                                .height(scaleLength)
-                                .width(36.dp),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(scaleMaximum.toInt().toString())
-                            Text(scaleMinimum.toInt().toString())
+                    Text(
+                        text = label,
+                        textAlign = TextAlign.Center,
+                        maxLines = 3
+                    )
+
+                    if (showCurrentValue) {
+                        Text(
+                            text = current.toInt().toString(),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                if (vertical) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (showEndpointLabels) {
+                            Column(
+                                modifier = Modifier
+                                    .height(availableLength)
+                                    .width(36.dp),
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(scaleMaximum.toInt().toString())
+                                Text(scaleMinimum.toInt().toString())
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        CanvasScale(
+                            value = current,
+                            minimum = scaleMinimum,
+                            maximum = scaleMaximum,
+                            length = availableLength,
+                            vertical = true,
+                            onValueChange = onValueChange
+                        )
                     }
-
+                } else {
                     CanvasScale(
                         value = current,
                         minimum = scaleMinimum,
                         maximum = scaleMaximum,
-                        length = scaleLength,
-                        vertical = true,
+                        length = availableLength,
+                        vertical = false,
                         onValueChange = onValueChange
                     )
-                }
-            } else {
-                CanvasScale(
-                    value = current,
-                    minimum = scaleMinimum,
-                    maximum = scaleMaximum,
-                    length = scaleLength,
-                    vertical = false,
-                    onValueChange = onValueChange
-                )
 
-                if (showEndpointLabels) {
-                    Row(
-                        modifier = Modifier
-                            .width(scaleLength)
-                            .height(24.dp)
-                    ) {
-                        Text(scaleMinimum.toInt().toString())
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(scaleMaximum.toInt().toString())
+                    if (showEndpointLabels) {
+                        Row(
+                            modifier = Modifier
+                                .width(availableLength)
+                                .height(24.dp)
+                        ) {
+                            Text(scaleMinimum.toInt().toString())
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text(scaleMaximum.toInt().toString())
+                        }
                     }
                 }
             }
