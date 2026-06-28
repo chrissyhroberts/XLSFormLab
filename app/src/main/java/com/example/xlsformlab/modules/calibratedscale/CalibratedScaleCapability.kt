@@ -32,6 +32,7 @@ import com.example.xlsformlab.core.CapabilityManifest
 import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.CapabilityOutput
 import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsState
 
@@ -514,6 +515,21 @@ class CalibratedScaleCapability : Capability {
     ): Float {
         val proportion = (1f - (y / height)).coerceIn(0f, 1f)
         return minimum + proportion * (maximum - minimum)
+    }
+
+
+    override fun buildOutput(
+        settingsState: SettingsState
+    ): CapabilityOutput {
+        return CapabilityOutput(
+            fields = mapOf(
+                "value" to settingsState.getFloat("value"),
+                "minimum" to settingsState.getFloat("minimum"),
+                "maximum" to settingsState.getFloat("maximum"),
+                "lower_value" to settingsState.getFloat("lower_value"),
+                "upper_value" to settingsState.getFloat("upper_value")
+            )
+        )
     }
 
     @Composable
