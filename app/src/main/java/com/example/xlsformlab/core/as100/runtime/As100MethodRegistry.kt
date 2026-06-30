@@ -10,6 +10,7 @@ import com.example.xlsformlab.modules.calibratedscale.As100CalibratedScaleMethod
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleMethod
 import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorMethod
 import com.example.xlsformlab.modules.nfc.As100NfcReadMethod
+import com.example.xlsformlab.modules.nfc.As100NfcWriteMethod
 import com.example.xlsformlab.modules.nfc.NfcReadMethod
 import com.example.xlsformlab.modules.nfc.NfcWriteMethod
 
@@ -34,8 +35,8 @@ object As100MethodRegistry {
     }
 
     private val methods: List<As100Method> by lazy {
-        listOf(As100NfcReadMethod, As100CalibratedScaleMethod) + legacyMethods
-            .filterNot { method -> method.manifest.id in setOf(As100NfcReadMethod.ID, As100CalibratedScaleMethod.ID) }
+        listOf(As100NfcReadMethod, As100NfcWriteMethod, As100CalibratedScaleMethod) + legacyMethods
+            .filterNot { method -> method.manifest.id in setOf(As100NfcReadMethod.ID, As100NfcWriteMethod.ID, As100CalibratedScaleMethod.ID) }
             .map { method -> As100LegacyMethodAdapter(method) }
     }
 

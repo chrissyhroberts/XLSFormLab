@@ -89,17 +89,17 @@ class NfcWriteMethod : Method {
         var status by remember { mutableStateOf(initialStatus) }
         var bundle by remember { mutableStateOf<NfcWriteEvidenceBundle?>(null) }
 
-        NfcSessionEffect(
+        NfcDeviceServiceEffect(
             enabled = active,
             onStatus = { status = it },
-            onTag = { tag ->
+            onSignal = { tagSignal ->
                 val request = NfcWriteRequest(
                     recordType = settingsState.getString("record_type"),
                     value = settingsState.getString("value"),
                     mimeType = settingsState.getString("mime_type"),
                     languageCode = settingsState.getString("language_code")
                 )
-                val result = NfcTagRepository.writeTag(tag, request, ID, VERSION)
+                val result = As100NfcWriteMethod.write(tagSignal, request)
                 bundle = result
                 status = result.writeMessage
                 active = false

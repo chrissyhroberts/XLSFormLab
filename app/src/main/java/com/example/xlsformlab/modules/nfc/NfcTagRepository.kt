@@ -235,11 +235,32 @@ object NfcTagRepository {
             methodVersion = methodVersion
         )
 
-    fun writeTag(tag: Tag, request: NfcWriteRequest, methodId: String, methodVersion: String): NfcWriteEvidenceBundle {
+    fun writeTag(
+        tag: Tag,
+        request: NfcWriteRequest,
+        methodId: String,
+        methodVersion: String
+    ): NfcWriteEvidenceBundle = writeTagSignal(
+        tagSignal = AndroidNfcDeviceService.tagSignalFromTag(tag),
+        request = request,
+        methodId = methodId,
+        methodVersion = methodVersion
+    )
+
+    fun writeTagSignal(
+        tagSignal: NfcTagSignal,
+        request: NfcWriteRequest,
+        methodId: String,
+        methodVersion: String,
+        methodObjectType: String = "Method",
+        methodLabel: String = "NFC Tag Write"
+    ): NfcWriteEvidenceBundle {
+        val tag = tagSignal.androidTag
+        val signal = tagSignal.signal
         val provenance = ProvenanceRecord(
             methodId = methodId,
             methodVersion = methodVersion,
-            provider = "android.nfc"
+            provider = signal.provenance.provider
         )
         val record = buildRecord(request)
         val message = NdefMessage(arrayOf(record))
@@ -267,7 +288,13 @@ object NfcTagRepository {
                 messages = if (writeResult.first) emptyList() else listOf(writeResult.second)
             )
         )
-        val readBack = readTag(tag, methodId, methodVersion)
+        val readBack = readTagSignal(
+            tagSignal = tagSignal,
+            methodId = methodId,
+            methodVersion = methodVersion,
+            methodObjectType = methodObjectType,
+            methodLabel = methodLabel
+        )
         val execution = readBack.execution.copy(
             id = provenance.executionId,
             methodId = methodId,
