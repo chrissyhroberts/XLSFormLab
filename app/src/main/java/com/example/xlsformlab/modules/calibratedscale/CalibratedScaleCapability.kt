@@ -570,17 +570,7 @@ class CalibratedScaleCapability : Capability {
 
     override fun buildOutput(
         settingsState: SettingsState
-    ): CapabilityOutput {
-        return CapabilityOutput(
-            fields = mapOf(
-                "value" to settingsState.getFloat("value"),
-                "minimum" to settingsState.getFloat("minimum"),
-                "maximum" to settingsState.getFloat("maximum"),
-                "lower_value" to settingsState.getFloat("lower_value"),
-                "upper_value" to settingsState.getFloat("upper_value")
-            )
-        )
-    }
+    ): CapabilityOutput = CalibratedScaleMethod.buildOutput(settingsState)
 
     @Composable
     override fun Help() {
