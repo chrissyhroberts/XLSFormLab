@@ -1,35 +1,30 @@
 package com.example.xlsformlab.core
 
-import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintCapability
-import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleCapability
-import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorCapability
-import com.example.xlsformlab.modules.nfc.NfcReadCapability
-import com.example.xlsformlab.modules.nfc.NfcWriteCapability
+import com.example.xlsformlab.core.as100.runtime.As100MethodRegistry
 
+/**
+ * Legacy compatibility registry.
+ *
+ * The canonical registry is now As100MethodRegistry. This object remains so the
+ * existing UI and transport code can migrate gradually without breaking imports.
+ */
 object CapabilityRegistry {
 
-    private val capabilities = listOf(
-        CalibratedScaleCapability(),
-        AdminFingerprintCapability(),
-        GpsTargetNavigatorCapability(),
-        NfcReadCapability(),
-        NfcWriteCapability()
-    )
-
-    fun all(): List<Capability> = capabilities
+    fun all(): List<Capability> =
+        As100MethodRegistry.legacyCapabilities()
 
     fun byCategory(category: CapabilityCategory): List<Capability> =
-        capabilities.filter { it.manifest.category == category }
+        As100MethodRegistry.legacyByCategory(category)
 
     fun find(id: String): Capability? =
-        capabilities.firstOrNull { it.manifest.id == id }
+        As100MethodRegistry.legacyFind(id)
 
     fun categoriesInUse(): List<CapabilityCategory> =
-        capabilities.map { it.manifest.category }.distinct()
+        As100MethodRegistry.legacyCategoriesInUse()
 
     fun manifests(): List<CapabilityManifest> =
-        capabilities.map { it.manifest }
+        As100MethodRegistry.legacyManifests()
 
     fun require(id: String): Capability =
-        find(id) ?: error("No XLSForm Lab capability registered with id: $id")
+        As100MethodRegistry.legacyRequire(id)
 }

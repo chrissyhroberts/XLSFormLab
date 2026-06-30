@@ -22,12 +22,12 @@ import com.example.xlsformlab.settings.SettingsState
  */
 class As100CapabilityMethod(
     val capability: Capability
-) {
-    val id: String = capability.manifest.id
+) : As100Method {
+    override val id: String = capability.manifest.id
 
-    val ref: ArchitectureRef = As100CapabilityRuntime.methodRef(capability)
+    override val ref: ArchitectureRef = As100CapabilityRuntime.methodRef(capability)
 
-    val descriptor: MethodDescriptor = MethodDescriptor(
+    override val descriptor: MethodDescriptor = MethodDescriptor(
         id = ArchitectureId(capability.manifest.id),
         methodType = MethodObjectType.Capability,
         name = capability.manifest.name,
@@ -41,7 +41,7 @@ class As100CapabilityMethod(
         )
     )
 
-    val contract: CapabilityContract = CapabilityContract(
+    override val contract: CapabilityContract = CapabilityContract(
         capability = ref,
         acceptedSignals = emptyList(),
         requiredContext = capability.manifest.requiredContext,
@@ -49,11 +49,11 @@ class As100CapabilityMethod(
         producedFields = capability.outputSchema.fields.map { it.id }
     )
 
-    fun request(
-        action: String = capability.manifest.id,
-        context: Map<String, String> = emptyMap(),
-        signals: List<Signal> = emptyList(),
-        inputs: List<ArchitectureRef> = emptyList()
+    override fun request(
+        action: String,
+        context: Map<String, String>,
+        signals: List<Signal>,
+        inputs: List<ArchitectureRef>
     ): ExecutionRequest = As100ExecutionEngine.requestFor(
         capability = capability,
         action = action,
@@ -62,10 +62,10 @@ class As100CapabilityMethod(
         inputs = inputs
     )
 
-    fun execute(
-        request: ExecutionRequest = request(),
-        settingsState: SettingsState? = null,
-        transport: String? = null
+    override fun execute(
+        request: ExecutionRequest,
+        settingsState: SettingsState?,
+        transport: String?
     ): ExecutionResult = As100ExecutionEngine.executeCapability(
         capability = capability,
         request = request,

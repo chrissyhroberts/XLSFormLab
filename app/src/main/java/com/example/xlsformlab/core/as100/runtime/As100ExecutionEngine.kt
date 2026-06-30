@@ -92,11 +92,11 @@ object As100ExecutionEngine {
         diagnostics = diagnostics
     )
 
-    fun methodFor(capabilityId: String): As100CapabilityMethod =
-        As100MethodRegistry.require(capabilityId)
+    fun methodFor(methodId: String): As100Method =
+        As100MethodRegistry.require(methodId)
 
     fun executeMethod(
-        method: As100CapabilityMethod,
+        method: As100Method,
         request: ExecutionRequest = method.request(),
         settingsState: SettingsState? = null,
         transport: String? = null
