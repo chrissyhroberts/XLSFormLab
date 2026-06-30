@@ -33,8 +33,9 @@ The following methods are now native ResearchOS / AS1.00 methods:
 - NFC Write
 - Calibrated Scale
 - GPS / Locate Target
+- Verify Fingerprint / Device Credential
 
-Other modules may still use compatibility adapters while they are migrated.
+The current interactive feature set is now represented as native ResearchOS / AS1.00 methods. Some compatibility shells remain where the current UI and transport preview still depend on the legacy Method interface.
 
 ## Compatibility policy
 

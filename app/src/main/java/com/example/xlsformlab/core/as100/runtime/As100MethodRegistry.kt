@@ -6,6 +6,7 @@ import com.example.xlsformlab.core.MethodManifest
 import com.example.xlsformlab.core.as100.MethodContract
 import com.example.xlsformlab.core.as100.MethodDescriptor
 import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintMethod
+import com.example.xlsformlab.modules.adminfingerprint.As100VerifyFingerprintMethod
 import com.example.xlsformlab.modules.calibratedscale.As100CalibratedScaleMethod
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleMethod
 import com.example.xlsformlab.modules.gpstargetnavigator.As100LocateTargetMethod
@@ -36,8 +37,20 @@ object As100MethodRegistry {
     }
 
     private val methods: List<As100Method> by lazy {
-        listOf(As100NfcReadMethod, As100NfcWriteMethod, As100CalibratedScaleMethod, As100LocateTargetMethod) + legacyMethods
-            .filterNot { method -> method.manifest.id in setOf(As100NfcReadMethod.ID, As100NfcWriteMethod.ID, As100CalibratedScaleMethod.ID, As100LocateTargetMethod.ID) }
+        listOf(
+            As100NfcReadMethod,
+            As100NfcWriteMethod,
+            As100CalibratedScaleMethod,
+            As100LocateTargetMethod,
+            As100VerifyFingerprintMethod
+        ) + legacyMethods
+            .filterNot { method -> method.manifest.id in setOf(
+                As100NfcReadMethod.ID,
+                As100NfcWriteMethod.ID,
+                As100CalibratedScaleMethod.ID,
+                As100LocateTargetMethod.ID,
+                As100VerifyFingerprintMethod.ID
+            ) }
             .map { method -> As100LegacyMethodAdapter(method) }
     }
 

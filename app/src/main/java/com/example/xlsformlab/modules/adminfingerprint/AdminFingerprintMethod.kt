@@ -28,29 +28,35 @@ import com.example.xlsformlab.core.MethodStatus
 import com.example.xlsformlab.core.ResearchActivity
 import com.example.xlsformlab.core.ResearchActivityKind
 import com.example.xlsformlab.platform.BiometricAuthHelper
+import com.example.xlsformlab.platform.biometric.AndroidBiometricDeviceService
 import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
-import java.time.Instant
 
+/**
+ * Compatibility UI shell for the native AS1.00 fingerprint/device-credential
+ * verification method. The research operation is owned by
+ * As100VerifyFingerprintMethod; this class keeps the current MethodCard demo,
+ * settings and transport preview working while the app UI is still Method-based.
+ */
 class AdminFingerprintMethod : Method {
 
     override val manifest = MethodManifest(
-        id = "admin_fingerprint_confirmation",
-        name = "Admin Fingerprint Confirmation",
-        description = "Request biometric or PIN confirmation from the registered device administrator.",
-        version = "0.1.0",
-        category = MethodCategory.Utilities,
+        id = As100VerifyFingerprintMethod.ID,
+        name = "Verify Fingerprint / Device Credential",
+        description = "Request biometric, PIN, pattern or password confirmation from the registered device user and return an attestation record.",
+        version = As100VerifyFingerprintMethod.VERSION,
+        category = MethodCategory.Attestation,
         status = MethodStatus.Experimental,
         activities = listOf(
             ResearchActivity(
-                id = "admin_fingerprint.attest",
+                id = "verify_fingerprint.attest",
                 kind = ResearchActivityKind.Attest,
-                label = "Attest administrator presence",
-                producesEvidence = listOf("confirmed", "auth_method", "timestamp_iso")
+                label = "Verify participant or operator presence",
+                producesEvidence = listOf("confirmed", "verification_status", "auth_method", "timestamp_iso")
             )
         ),
         requiredDeviceFeatures = listOf("biometric_or_device_credential"),
-        contractSummary = "Requests local device authentication and returns an attestation result."
+        contractSummary = "Requests local device authentication and returns an AS1.00 attestation observation with configurable provenance fields."
     )
 
     override val settings = listOf(
@@ -58,7 +64,7 @@ class AdminFingerprintMethod : Method {
             id = "prompt_title",
             label = "Prompt title",
             group = "Prompt",
-            defaultValue = "Admin confirmation required"
+            defaultValue = "Confirmation required"
         ),
         MethodSetting.TextSetting(
             id = "prompt_subtitle",
@@ -70,7 +76,7 @@ class AdminFingerprintMethod : Method {
             id = "prompt_description",
             label = "Prompt description",
             group = "Prompt",
-            defaultValue = "Confirm that a registered phone administrator is present."
+            defaultValue = "Confirm that the expected participant or operator is present."
         ),
         MethodSetting.TextSetting(
             id = "cancel_text",
@@ -82,7 +88,7 @@ class AdminFingerprintMethod : Method {
             id = "confirmation_reason",
             label = "Confirmation reason",
             group = "Output",
-            defaultValue = "admin_confirm"
+            defaultValue = "verify_fingerprint"
         ),
         MethodSetting.BooleanSetting(
             id = "confirmation_required",
@@ -95,68 +101,37 @@ class AdminFingerprintMethod : Method {
             label = "Allow PIN/pattern/password fallback",
             group = "Security",
             defaultValue = true
-        )
+        ),
     )
 
     override val outputSchema = MethodOutputSchema(
         fields = listOf(
-            MethodField(
-                id = "confirmed",
-                label = "Confirmed",
-                type = MethodFieldType.Boolean,
-                required = true
-            ),
-            MethodField(
-                id = "auth_method",
-                label = "Authentication method",
-                type = MethodFieldType.Text,
-                required = true
-            ),
-            MethodField(
-                id = "timestamp_ms",
-                label = "Timestamp milliseconds",
-                type = MethodFieldType.Integer,
-                required = true
-            ),
-            MethodField(
-                id = "timestamp_iso",
-                label = "Timestamp ISO",
-                type = MethodFieldType.Text,
-                required = true
-            ),
-            MethodField(
-                id = "reason",
-                label = "Reason",
-                type = MethodFieldType.Text,
-                required = false
-            ),
-            MethodField(
-                id = "message",
-                label = "Message",
-                type = MethodFieldType.Text,
-                required = false
-            )
+            MethodField("confirmed", "Confirmed", MethodFieldType.Boolean, required = true),
+            MethodField("verification_status", "Verification status", MethodFieldType.Text, required = true),
+            MethodField("auth_method", "Authentication method", MethodFieldType.Text, required = true),
+            MethodField("timestamp_ms", "Timestamp milliseconds", MethodFieldType.Integer, required = true),
+            MethodField("timestamp_iso", "Timestamp ISO", MethodFieldType.Text, required = true),
+            MethodField("reason", "Reason", MethodFieldType.Text, required = false),
+            MethodField("message", "Message", MethodFieldType.Text, required = false),
+            MethodField("biometric_device_service", "Biometric device service", MethodFieldType.Text, required = true),
+            MethodField("biometric_signal_type", "Biometric signal type", MethodFieldType.Text, required = true),
+            MethodField("biometric_execution_id", "Biometric execution ID", MethodFieldType.Text, required = false),
+            MethodField("biometric_provenance_json", "Biometric provenance JSON", MethodFieldType.Json, required = false)
         )
     )
 
     @Composable
-    override fun Demo(
-        settingsState: SettingsState
-    ) {
+    override fun Demo(settingsState: SettingsState) {
         val context = LocalContext.current
-        var statusText by remember {
-            mutableStateOf("Not confirmed")
-        }
+        var statusText by remember { mutableStateOf("Not confirmed") }
 
         val allowDeviceCredential = settingsState.getBoolean("allow_device_credential")
-        val availability = BiometricAuthHelper.availability(
+        val availability = AndroidBiometricDeviceService.availability(
             context = context,
             allowDeviceCredential = allowDeviceCredential
         )
 
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(availability.message)
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,25 +152,29 @@ class AdminFingerprintMethod : Method {
                         confirmationRequired = settingsState.getBoolean("confirmation_required"),
                         allowDeviceCredential = settingsState.getBoolean("allow_device_credential"),
                         onSuccess = { authMethod ->
-                            val now = System.currentTimeMillis()
-
-                            settingsState.setBoolean("confirmed", true)
-                            settingsState.setInt(
-                                "timestamp_ms",
-                                now.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                            val signal = AndroidBiometricDeviceService.authenticationSignal(
+                                verified = true,
+                                authMethod = authMethod,
+                                message = "Confirmed"
                             )
-                            settingsState.setString(
-                                "timestamp_iso",
-                                Instant.ofEpochMilli(now).toString()
+                            As100VerifyFingerprintMethod.recordAuthenticationResult(
+                                settingsState = settingsState,
+                                authenticationSignal = signal,
+                                reason = settingsState.getString("confirmation_reason")
                             )
-                            settingsState.setString("auth_method", authMethod)
-                            settingsState.setString("message", "Confirmed")
                             statusText = "Confirmed using $authMethod"
                         },
                         onFailure = { message ->
-                            settingsState.setBoolean("confirmed", false)
-                            settingsState.setString("auth_method", "none")
-                            settingsState.setString("message", message)
+                            val signal = AndroidBiometricDeviceService.authenticationSignal(
+                                verified = false,
+                                authMethod = "none",
+                                message = message
+                            )
+                            As100VerifyFingerprintMethod.recordAuthenticationResult(
+                                settingsState = settingsState,
+                                authenticationSignal = signal,
+                                reason = settingsState.getString("confirmation_reason")
+                            )
                             statusText = message
                         }
                     )
@@ -213,33 +192,22 @@ class AdminFingerprintMethod : Method {
         }
     }
 
-    override fun buildOutput(
-        settingsState: SettingsState
-    ): MethodOutput {
-        return MethodOutput(
-            fields = mapOf(
-                "confirmed" to settingsState.getBoolean("confirmed"),
-                "auth_method" to settingsState.getString("auth_method").ifBlank { "none" },
-                "timestamp_ms" to settingsState.getInt("timestamp_ms"),
-                "timestamp_iso" to settingsState.getString("timestamp_iso"),
-                "reason" to settingsState.getString("confirmation_reason"),
-                "message" to settingsState.getString("message")
-            )
-        )
-    }
+    override fun buildOutput(settingsState: SettingsState): MethodOutput =
+        As100VerifyFingerprintMethod.buildOutput(settingsState)
 
     @Composable
     override fun Help() {
         Text(
             "Requests confirmation using Android BiometricPrompt. " +
                 "Depending on device settings, this can use fingerprint, face unlock, PIN, pattern, or password. " +
-                "No fingerprint data is accessed or stored by ResearchOS."
+                "No fingerprint data is accessed or stored by ResearchOS. The AS1.00 method records only the authentication outcome, timestamp, device-service signal and provenance."
         )
     }
 
-    override fun execute(
-        request: MethodRequest
-    ): MethodResult {
-        return MethodResult(success = true)
+    override fun execute(request: MethodRequest): MethodResult {
+        return MethodResult(
+            success = false,
+            errorMessage = "Fingerprint/device-credential verification is an interactive device-service method and must be initiated from a UI or intent flow that can display Android BiometricPrompt."
+        )
     }
 }
