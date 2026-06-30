@@ -37,9 +37,7 @@ fun HomeScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("XLSForm Lab Workbench")
-                }
+                title = { Text("XLSForm Lab Runtime") }
             )
         }
     ) { padding ->
@@ -48,15 +46,11 @@ fun HomeScreen() {
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            item {
-                CalibrationCard()
-            }
+            item { RuntimeSummaryCard() }
+            item { CalibrationCard() }
+            item { SensorDashboardCard() }
 
-            item {
-                SensorDashboardCard()
-            }
-
-            items(CapabilityCategory.entries) { category ->
+            items(CapabilityRegistry.categoriesInUse()) { category ->
                 CapabilityCategoryCard(category = category)
             }
         }
@@ -64,10 +58,36 @@ fun HomeScreen() {
 }
 
 @Composable
-private fun CalibrationCard() {
-    var expanded by remember {
-        mutableStateOf(false)
+private fun RuntimeSummaryCard() {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        elevation = CardDefaults.elevatedCardElevation(2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Capability runtime",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "ODK remains the canonical form engine. XLSForm Lab executes specialised research capabilities and returns validated evidence.",
+                modifier = Modifier.padding(top = 4.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Installed capabilities: ${CapabilityRegistry.all().size}",
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
     }
+}
+
+@Composable
+private fun CalibrationCard() {
+    var expanded by remember { mutableStateOf(false) }
 
     ElevatedCard(
         modifier = Modifier
@@ -75,22 +95,14 @@ private fun CalibrationCard() {
             .padding(horizontal = 8.dp, vertical = 6.dp),
         elevation = CardDefaults.elevatedCardElevation(2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        expanded = !expanded
-                    }
+                    .clickable { expanded = !expanded }
             ) {
                 Text(
-                    text = if (expanded) {
-                        "▼ Device calibration"
-                    } else {
-                        "▶ Device calibration"
-                    },
+                    text = if (expanded) "▼ Device calibration" else "▶ Device calibration",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
@@ -105,12 +117,9 @@ private fun CalibrationCard() {
     }
 }
 
-
 @Composable
 private fun SensorDashboardCard() {
-    var expanded by remember {
-        mutableStateOf(false)
-    }
+    var expanded by remember { mutableStateOf(false) }
 
     ElevatedCard(
         modifier = Modifier
@@ -118,22 +127,14 @@ private fun SensorDashboardCard() {
             .padding(horizontal = 8.dp, vertical = 6.dp),
         elevation = CardDefaults.elevatedCardElevation(2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        expanded = !expanded
-                    }
+                    .clickable { expanded = !expanded }
             ) {
                 Text(
-                    text = if (expanded) {
-                        "▼ Device sensors"
-                    } else {
-                        "▶ Device sensors"
-                    },
+                    text = if (expanded) "▼ Device signals" else "▶ Device signals",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
@@ -149,14 +150,9 @@ private fun SensorDashboardCard() {
 }
 
 @Composable
-private fun CapabilityCategoryCard(
-    category: CapabilityCategory
-) {
+private fun CapabilityCategoryCard(category: CapabilityCategory) {
     val capabilities = CapabilityRegistry.byCategory(category)
-
-    var expanded by remember {
-        mutableStateOf(true)
-    }
+    var expanded by remember { mutableStateOf(true) }
 
     ElevatedCard(
         modifier = Modifier
@@ -164,22 +160,14 @@ private fun CapabilityCategoryCard(
             .padding(horizontal = 8.dp, vertical = 6.dp),
         elevation = CardDefaults.elevatedCardElevation(2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        expanded = !expanded
-                    }
+                    .clickable { expanded = !expanded }
             ) {
                 Text(
-                    text = if (expanded) {
-                        "▼ ${category.name}"
-                    } else {
-                        "▶ ${category.name}"
-                    },
+                    text = if (expanded) "▼ ${category.name}" else "▶ ${category.name}",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold

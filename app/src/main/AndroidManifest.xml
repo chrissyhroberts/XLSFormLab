@@ -17,6 +17,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.XLSFormLab">
         <activity
+            android:name=".transport.android.IntentRouterActivity"
+            android:exported="true"
+            android:theme="@style/Theme.XLSFormLab">
+            <intent-filter>
+                <action android:name="com.example.xlsformlab.RUN_CAPABILITY" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="xlsformlab" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

@@ -1,30 +1,34 @@
 package com.example.xlsformlab.transport
 
 import com.example.xlsformlab.core.CapabilityOutput
+import com.example.xlsformlab.core.EvidenceArtifact
 
 object OutputFormatter {
 
-    fun format(
-        output: CapabilityOutput,
-        returnMode: ReturnMode
-    ): String {
-        return when (returnMode) {
-            ReturnMode.Single -> output.fields.values.firstOrNull()?.toString() ?: ""
+    fun format(output: CapabilityOutput, returnMode: ReturnMode): String =
+        formatFields(output.fields, returnMode)
 
-            ReturnMode.Fields -> output.fields.entries.joinToString("\n") { (key, value) ->
+    fun format(artifact: EvidenceArtifact, returnMode: ReturnMode, includeProvenance: Boolean = true): String =
+        formatFields(artifact.asFlatFields(includeProvenance), returnMode)
+
+    private fun formatFields(fields: Map<String, Any?>, returnMode: ReturnMode): String {
+        return when (returnMode) {
+            ReturnMode.Single -> fields.values.firstOrNull()?.toString() ?: ""
+
+            ReturnMode.Fields -> fields.entries.joinToString("\n") { (key, value) ->
                 "$key=$value"
             }
 
-            ReturnMode.Json -> output.fields.entries.joinToString(
+            ReturnMode.Json -> fields.entries.joinToString(
                 prefix = "{\n",
                 separator = ",\n",
                 postfix = "\n}"
             ) { (key, value) ->
-                "  \"$key\": ${formatJsonValue(value)}"
+                "  ${quote(key)}: ${formatJsonValue(value)}"
             }
 
-            ReturnMode.Datapoints -> output.fields.entries.mapIndexed { index, entry ->
-                "${index + 1},${entry.key},${entry.value}"
+            ReturnMode.Datapoints -> fields.entries.mapIndexed { index, entry ->
+                "${index + 1},${escapeCsv(entry.key)},${escapeCsv(entry.value?.toString() ?: "") }"
             }.joinToString("\n")
         }
     }
@@ -34,7 +38,28 @@ object OutputFormatter {
             null -> "null"
             is Number -> value.toString()
             is Boolean -> value.toString()
-            else -> "\"${value.toString().replace("\"", "\\\"")}\""
+            is Map<*, *> -> value.entries.joinToString(
+                prefix = "{",
+                separator = ",",
+                postfix = "}"
+            ) { (key, nestedValue) ->
+                "${quote(key.toString())}:${formatJsonValue(nestedValue)}"
+            }
+            is Iterable<*> -> value.joinToString(
+                prefix = "[",
+                separator = ",",
+                postfix = "]"
+            ) { item -> formatJsonValue(item) }
+            else -> quote(value.toString())
         }
+    }
+
+    private fun quote(value: String): String =
+        "\"${value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")}\""
+
+    private fun escapeCsv(value: String): String {
+        val mustQuote = value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }
+        val escaped = value.replace("\"", "\"\"")
+        return if (mustQuote) "\"$escaped\"" else escaped
     }
 }

@@ -1,19 +1,35 @@
 package com.example.xlsformlab.transport
 
+import com.example.xlsformlab.core.CapabilityExecutionRequest
+import com.example.xlsformlab.core.ResearchContext
 import java.net.URLDecoder
 
+/**
+ * Parses ODK appearance strings, Android intent URIs, and simple query strings into a
+ * transport-neutral launch request.
+ */
 data class ParsedLaunchConfig(
     val capabilityId: String?,
     val returnMode: ReturnMode?,
     val settings: Map<String, String>,
-    val warnings: List<String> = emptyList()
-)
+    val context: Map<String, String> = emptyMap(),
+    val warnings: List<String> = emptyList(),
+    val source: String? = null
+) {
+    fun toExecutionRequest(): CapabilityExecutionRequest? =
+        capabilityId?.let { id ->
+            CapabilityExecutionRequest(
+                capabilityId = id,
+                context = ResearchContext(context),
+                parameters = settings,
+                transport = source
+            )
+        }
+}
 
 object LaunchConfigParser {
 
-    fun parse(
-        text: String
-    ): ParsedLaunchConfig {
+    fun parse(text: String): ParsedLaunchConfig {
         val trimmed = text.trim()
 
         return when {
@@ -23,60 +39,77 @@ object LaunchConfigParser {
             trimmed.startsWith("intent:#Intent") ->
                 parseAndroidIntentUri(trimmed)
 
+            trimmed.contains("=") ->
+                parseQueryLike(trimmed)
+
             else ->
                 ParsedLaunchConfig(
                     capabilityId = null,
                     returnMode = null,
                     settings = emptyMap(),
-                    warnings = listOf("Input was not recognised as an XLSForm Lab appearance or Android intent URI.")
+                    warnings = listOf("Input was not recognised as an XLSForm Lab appearance, query string, or Android intent URI.")
                 )
         }
     }
 
-    private fun parseAppearance(
-        text: String
-    ): ParsedLaunchConfig {
+    private fun parseAppearance(text: String): ParsedLaunchConfig {
         val inside = text
             .removePrefix("xlsformlab(")
             .removeSuffix(")")
 
-        val values = parseKeyValueParts(
-            parts = inside.split(";"),
-            androidPrefixes = false
-        )
-
-        return ParsedLaunchConfig(
-            capabilityId = values["capability"],
-            returnMode = values["return_mode"]?.let { ReturnMode.fromId(it) },
-            settings = values
-                .filterKeys {
-                    it != "capability" && it != "return_mode"
-                }
+        return buildConfig(
+            values = parseKeyValueParts(inside.split(";"), androidPrefixes = false),
+            source = "odk_appearance"
         )
     }
 
-    private fun parseAndroidIntentUri(
-        text: String
-    ): ParsedLaunchConfig {
-        val values = parseKeyValueParts(
-            parts = text.split(";"),
-            androidPrefixes = true
-        )
-
-        return ParsedLaunchConfig(
-            capabilityId = values["capability_id"],
-            returnMode = values["return_mode"]?.let { ReturnMode.fromId(it) },
-            settings = values
-                .filterKeys {
-                    it != "capability_id" && it != "return_mode"
-                }
+    private fun parseAndroidIntentUri(text: String): ParsedLaunchConfig {
+        return buildConfig(
+            values = parseKeyValueParts(text.split(";"), androidPrefixes = true),
+            source = "android_intent_uri"
         )
     }
 
-    private fun parseKeyValueParts(
-        parts: List<String>,
-        androidPrefixes: Boolean
-    ): Map<String, String> {
+    private fun parseQueryLike(text: String): ParsedLaunchConfig {
+        val normalised = text.removePrefix("?").replace("&", ";")
+        return buildConfig(
+            values = parseKeyValueParts(normalised.split(";"), androidPrefixes = false),
+            source = "query"
+        )
+    }
+
+    private fun buildConfig(values: Map<String, String>, source: String): ParsedLaunchConfig {
+        val capabilityId = values["capability"]
+            ?: values["capability_id"]
+            ?: values["module"]
+            ?: values["module_id"]
+
+        val returnMode = values["return_mode"]
+            ?: values["return"]
+            ?: values["mode"]
+
+        val reserved = setOf(
+            "capability", "capability_id", "module", "module_id",
+            "return_mode", "return", "mode"
+        )
+
+        val context = values
+            .filterKeys { key -> key.startsWith("context_") }
+            .mapKeys { (key, _) -> key.removePrefix("context_") }
+
+        val settings = values
+            .filterKeys { key -> key !in reserved && !key.startsWith("context_") }
+
+        return ParsedLaunchConfig(
+            capabilityId = capabilityId,
+            returnMode = returnMode?.let { ReturnMode.fromId(it) },
+            settings = settings,
+            context = context,
+            source = source
+        )
+    }
+
+    private fun parseKeyValueParts(parts: List<String>, androidPrefixes: Boolean): Map<String, String> {
         val values = mutableMapOf<String, String>()
 
         parts.forEach { rawPart ->
@@ -86,7 +119,7 @@ object LaunchConfigParser {
                 return@forEach
             }
 
-            val key = part.substringBefore("=")
+            val key = part.substringBefore("=").removePrefix("S.").removePrefix("B.").removePrefix("i.").removePrefix("f.")
             val value = part.substringAfter("=")
 
             val normalisedKey = if (androidPrefixes && key.length > 2 && key[1] == '.') {
@@ -101,9 +134,6 @@ object LaunchConfigParser {
         return values
     }
 
-    private fun decode(
-        value: String
-    ): String {
-        return URLDecoder.decode(value, "UTF-8")
-    }
+    private fun decode(value: String): String =
+        URLDecoder.decode(value, "UTF-8")
 }

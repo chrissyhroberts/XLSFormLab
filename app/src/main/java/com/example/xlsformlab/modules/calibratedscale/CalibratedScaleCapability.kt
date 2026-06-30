@@ -32,6 +32,8 @@ import com.example.xlsformlab.core.CapabilityManifest
 import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.ResearchActivity
+import com.example.xlsformlab.core.ResearchActivityKind
 import com.example.xlsformlab.core.CapabilityOutput
 import com.example.xlsformlab.core.CapabilityField
 import com.example.xlsformlab.core.CapabilityFieldType
@@ -48,7 +50,16 @@ class CalibratedScaleCapability : Capability {
         description = "A configurable visual analogue and numeric scale.",
         version = "1.0.0",
         category = CapabilityCategory.Measurement,
-        status = CapabilityStatus.Experimental
+        status = CapabilityStatus.Experimental,
+        activities = listOf(
+            ResearchActivity(
+                id = "calibrated_scale.measure",
+                kind = ResearchActivityKind.Measure,
+                label = "Measure a value on a calibrated scale",
+                producesEvidence = listOf("value", "minimum", "maximum")
+            )
+        ),
+        contractSummary = "Collects a calibrated scalar or range value and returns declared numeric outputs."
     )
 
 

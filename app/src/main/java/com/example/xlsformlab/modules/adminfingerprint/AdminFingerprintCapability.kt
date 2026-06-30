@@ -25,6 +25,8 @@ import com.example.xlsformlab.core.CapabilityOutputSchema
 import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.ResearchActivity
+import com.example.xlsformlab.core.ResearchActivityKind
 import com.example.xlsformlab.platform.BiometricAuthHelper
 import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsState
@@ -38,7 +40,17 @@ class AdminFingerprintCapability : Capability {
         description = "Request biometric or PIN confirmation from the registered device administrator.",
         version = "0.1.0",
         category = CapabilityCategory.Utilities,
-        status = CapabilityStatus.Experimental
+        status = CapabilityStatus.Experimental,
+        activities = listOf(
+            ResearchActivity(
+                id = "admin_fingerprint.attest",
+                kind = ResearchActivityKind.Attest,
+                label = "Attest administrator presence",
+                producesEvidence = listOf("confirmed", "auth_method", "timestamp_iso")
+            )
+        ),
+        requiredDeviceFeatures = listOf("biometric_or_device_credential"),
+        contractSummary = "Requests local device authentication and returns an attestation result."
     )
 
     override val settings = listOf(

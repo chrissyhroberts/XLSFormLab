@@ -50,6 +50,8 @@ import com.example.xlsformlab.core.CapabilityOutputSchema
 import com.example.xlsformlab.core.CapabilityRequest
 import com.example.xlsformlab.core.CapabilityResult
 import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.ResearchActivity
+import com.example.xlsformlab.core.ResearchActivityKind
 import com.example.xlsformlab.settings.CapabilitySetting
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.platform.sensors.PhoneSensorRepository
@@ -69,7 +71,17 @@ class GpsTargetNavigatorCapability : Capability {
         description = "Guide the user towards a target GPS coordinate and return distance, bearing and arrival status.",
         version = "0.2.0",
         category = CapabilityCategory.Mapping,
-        status = CapabilityStatus.Experimental
+        status = CapabilityStatus.Experimental,
+        activities = listOf(
+            ResearchActivity(
+                id = "gps_target_navigator.localise",
+                kind = ResearchActivityKind.Localise,
+                label = "Localise relative to a target coordinate",
+                producesEvidence = listOf("distance_m", "bearing_degrees", "arrived")
+            )
+        ),
+        requiredDeviceFeatures = listOf("fine_location", "coarse_location", "compass"),
+        contractSummary = "Guides fieldworkers to a known coordinate and returns distance, bearing and arrival evidence."
     )
 
     override val settings = listOf(
