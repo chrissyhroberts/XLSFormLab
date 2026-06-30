@@ -21,16 +21,15 @@ For example, ResearchOS can provide methods such as:
 * Launch the correct electronic data collection form for the next study activity.
 * Rather than being implemented as independent applications, these become reusable ResearchOS Methods that can be combined into larger workflows.
 
-ResearchOS is guided by Architecture Standard 1.00 (AS1.00), which separates knowledge, execution, presentation and device interaction into independent architectural layers. This allows methods to remain reusable while supporting different user interfaces, devices and future runtime environments.
 
-See `docs/Architecture.md` for the overall architecture vision.
 
-This roadmap describes the planned direction of the platform rather than a fixed release schedule. Priorities may evolve as the architecture matures and new research use cases emerge.
 
 
 ## Purpose
 
 ResearchOS is an open platform for building reusable, device-independent research methods. The project is guided by Architecture Standard 1.00 (AS1.00), which separates knowledge, execution, presentation and device interaction into independent architectural layers.
+
+See `docs/Architecture.md` for the overall architecture vision.
 
 This roadmap describes the planned direction of the platform rather than a fixed release schedule. Priorities may evolve as the architecture matures and new research use cases emerge.
 
