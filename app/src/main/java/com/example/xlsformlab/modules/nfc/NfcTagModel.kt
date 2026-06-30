@@ -162,7 +162,7 @@ object NfcTagCodec {
             "mime" -> NdefRecord.createMime(request.mimeType.ifBlank { "text/plain" }, request.value.toByteArray(Charsets.UTF_8))
             "external" -> {
                 val parts = request.mimeType.split(":", limit = 2)
-                val domain = parts.getOrNull(0)?.takeIf { it.isNotBlank() } ?: "xlsformlab"
+                val domain = parts.getOrNull(0)?.takeIf { it.isNotBlank() } ?: "researchos"
                 val type = parts.getOrNull(1)?.takeIf { it.isNotBlank() } ?: "value"
                 NdefRecord.createExternal(domain, type, request.value.toByteArray(Charsets.UTF_8))
             }

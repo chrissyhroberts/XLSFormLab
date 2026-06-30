@@ -18,7 +18,7 @@ object OdkIntentBuilder {
             }
             .joinToString(";")
 
-        return "xlsformlab(method=${method.manifest.id};return_mode=$returnMode;$settings)"
+        return "researchos(method=${method.manifest.id};return_mode=$returnMode;$settings)"
     }
 
     fun buildIntentColumnValue(

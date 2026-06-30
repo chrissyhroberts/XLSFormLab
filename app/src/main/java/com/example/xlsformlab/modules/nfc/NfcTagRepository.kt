@@ -142,7 +142,7 @@ object NfcTagRepository {
         )
         val artifact = ArtifactRecord(
             kind = ArtifactKind.NfcTag,
-            mediaType = "application/vnd.xlsformlab.nfc-tag+json",
+            mediaType = "application/vnd.researchos.nfc-tag+json",
             values = tagValues,
             provenance = provenance
         )
@@ -387,7 +387,7 @@ object NfcTagRepository {
             )
             "external" -> {
                 val parts = request.mimeType.split(":", limit = 2)
-                val domain = parts.getOrNull(0)?.takeIf { it.isNotBlank() } ?: "xlsformlab"
+                val domain = parts.getOrNull(0)?.takeIf { it.isNotBlank() } ?: "researchos"
                 val type = parts.getOrNull(1)?.takeIf { it.isNotBlank() } ?: "value"
                 NdefRecord.createExternal(domain, type, request.value.toByteArray(Charsets.UTF_8))
             }

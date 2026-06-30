@@ -74,7 +74,7 @@ object As100MethodRuntime {
 
         val status = if (legacy.success) TransformationStatus.Succeeded else TransformationStatus.Failed
         val provenance = ProvenanceContext(
-            provider = "xlsformlab.method_runtime",
+            provider = "researchos.method_runtime",
             methodId = method.manifest.id,
             methodVersion = method.manifest.version
         )

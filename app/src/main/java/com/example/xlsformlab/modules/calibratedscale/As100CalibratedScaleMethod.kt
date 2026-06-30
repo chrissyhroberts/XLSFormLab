@@ -96,7 +96,7 @@ object As100CalibratedScaleMethod : As100Method {
 
         val values = measurementValues(settingsState)
         val provenance = ProvenanceContext(
-            provider = "xlsformlab.presentation.calibrated_scale",
+            provider = "researchos.presentation.calibrated_scale",
             methodId = ID,
             methodVersion = VERSION
         )

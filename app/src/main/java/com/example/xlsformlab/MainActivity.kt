@@ -6,7 +6,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.activity.enableEdgeToEdge
 import com.example.xlsformlab.calibration.CalibrationRepository
 import com.example.xlsformlab.ui.HomeScreen
-import com.example.xlsformlab.ui.theme.XLSFormLabTheme
+import com.example.xlsformlab.ui.theme.ResearchOSTheme
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,7 +16,7 @@ class MainActivity : FragmentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            XLSFormLabTheme {
+            ResearchOSTheme {
                 HomeScreen()
             }
         }

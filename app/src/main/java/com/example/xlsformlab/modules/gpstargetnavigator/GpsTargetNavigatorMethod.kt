@@ -417,44 +417,7 @@ class GpsTargetNavigatorMethod : Method {
 
     override fun buildOutput(
         settingsState: SettingsState
-    ): MethodOutput {
-        val targetLatitude = settingsState.getFloat("target_latitude")
-        val targetLongitude = settingsState.getFloat("target_longitude")
-        val currentLatitude = settingsState.getFloat("current_latitude")
-        val currentLongitude = settingsState.getFloat("current_longitude")
-        val arrivalRadius = settingsState.getFloat("arrival_radius_m")
-
-        if (currentLatitude != 0f || currentLongitude != 0f) {
-            updateNavigationState(
-                settingsState = settingsState,
-                currentLatitude = currentLatitude.toDouble(),
-                currentLongitude = currentLongitude.toDouble(),
-                accuracy = settingsState.getFloat("accuracy_m"),
-                targetLatitude = targetLatitude.toDouble(),
-                targetLongitude = targetLongitude.toDouble(),
-                arrivalRadius = arrivalRadius
-            )
-        }
-
-        return MethodOutput(
-            fields = mapOf(
-                "target_name" to settingsState.getString("target_name"),
-                "target_latitude" to targetLatitude,
-                "target_longitude" to targetLongitude,
-                "current_latitude" to currentLatitude,
-                "current_longitude" to currentLongitude,
-                "accuracy_m" to settingsState.getFloat("accuracy_m"),
-                "distance_m" to settingsState.getFloat("distance_m"),
-                "bearing_deg" to settingsState.getFloat("bearing_deg"),
-                "heading_deg" to settingsState.getFloat("heading_deg"),
-                "relative_bearing_deg" to settingsState.getFloat("relative_bearing_deg"),
-                "arrived" to settingsState.getBoolean("arrived"),
-                "timestamp_ms" to settingsState.getString("timestamp_ms"),
-                "update_count" to settingsState.getFloat("update_count"),
-                "status" to settingsState.getString("status")
-            )
-        )
-    }
+    ): MethodOutput = As100LocateTargetMethod.buildOutput(settingsState)
 
     @Composable
     override fun Help() {
@@ -480,21 +443,15 @@ class GpsTargetNavigatorMethod : Method {
         targetLongitude: Double,
         arrivalRadius: Float
     ) {
-        val result = distanceAndBearing(
+        As100LocateTargetMethod.updateSettingsFromLocation(
+            settingsState = settingsState,
             currentLatitude = currentLatitude,
             currentLongitude = currentLongitude,
+            accuracy = accuracy,
             targetLatitude = targetLatitude,
-            targetLongitude = targetLongitude
+            targetLongitude = targetLongitude,
+            arrivalRadius = arrivalRadius
         )
-
-        settingsState.setFloat("current_latitude", currentLatitude.toFloat())
-        settingsState.setFloat("current_longitude", currentLongitude.toFloat())
-        settingsState.setFloat("accuracy_m", accuracy)
-        settingsState.setFloat("distance_m", result.distanceMeters)
-        settingsState.setFloat("bearing_deg", result.initialBearingDegrees)
-        settingsState.setBoolean("arrived", result.distanceMeters <= arrivalRadius)
-        settingsState.setString("timestamp_ms", System.currentTimeMillis().toString())
-        settingsState.setString("status", "updated")
     }
 
     private fun distanceAndBearing(

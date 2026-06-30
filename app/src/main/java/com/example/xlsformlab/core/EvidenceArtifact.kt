@@ -14,10 +14,10 @@ data class EvidenceArtifact(
         if (!includeProvenance) return output.fields
 
         return output.fields + mapOf(
-            "_xlsformlab_run_id" to provenance.runId,
-            "_xlsformlab_generated_at" to provenance.generatedAt,
-            "_xlsformlab_method_id" to provenance.methodId,
-            "_xlsformlab_method_version" to provenance.methodVersion
+            "_researchos_run_id" to provenance.runId,
+            "_researchos_generated_at" to provenance.generatedAt,
+            "_researchos_method_id" to provenance.methodId,
+            "_researchos_method_version" to provenance.methodVersion
         )
     }
 }
