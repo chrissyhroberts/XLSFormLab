@@ -15,32 +15,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityCategory
-import com.example.xlsformlab.core.CapabilityField
-import com.example.xlsformlab.core.CapabilityFieldType
-import com.example.xlsformlab.core.CapabilityManifest
-import com.example.xlsformlab.core.CapabilityOutput
-import com.example.xlsformlab.core.CapabilityOutputSchema
-import com.example.xlsformlab.core.CapabilityRequest
-import com.example.xlsformlab.core.CapabilityResult
-import com.example.xlsformlab.core.CapabilityStatus
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodField
+import com.example.xlsformlab.core.MethodFieldType
+import com.example.xlsformlab.core.MethodManifest
+import com.example.xlsformlab.core.MethodOutput
+import com.example.xlsformlab.core.MethodOutputSchema
+import com.example.xlsformlab.core.MethodRequest
+import com.example.xlsformlab.core.MethodResult
+import com.example.xlsformlab.core.MethodStatus
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 
-class NfcWriteCapability : Capability {
+class NfcWriteMethod : Method {
 
-    override val manifest = CapabilityManifest(
+    override val manifest = MethodManifest(
         id = ID,
         name = "NFC Tag Write",
         description = "Perform an NDEF write intervention and return write outcome plus post-write observation.",
         version = VERSION,
-        category = CapabilityCategory.NFC,
-        status = CapabilityStatus.Experimental
+        category = MethodCategory.NFC,
+        status = MethodStatus.Experimental
     )
 
     override val settings = listOf(
-        CapabilitySetting.ChoiceSetting(
+        MethodSetting.ChoiceSetting(
             id = "record_type",
             label = "Record type",
             description = "NDEF record type to write.",
@@ -48,21 +48,21 @@ class NfcWriteCapability : Capability {
             defaultValue = "text",
             choices = listOf("text", "uri", "mime", "external")
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "value",
             label = "Value",
             description = "Value to write to the tag. Runtime context may override this setting.",
             group = "Intervention",
             defaultValue = ""
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "mime_type",
             label = "MIME or external type",
             description = "For MIME records, use e.g. text/plain. For external records, use domain:type.",
             group = "Intervention",
             defaultValue = "text/plain"
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "language_code",
             label = "Language code",
             description = "Language code for text records.",
@@ -71,14 +71,14 @@ class NfcWriteCapability : Capability {
         )
     )
 
-    override val outputSchema = CapabilityOutputSchema(
+    override val outputSchema = MethodOutputSchema(
         fields = listOf(
-            CapabilityField(NfcWriteFields.WRITE_SUCCESS, "Write success", CapabilityFieldType.Boolean, required = true),
-            CapabilityField(NfcWriteFields.WRITE_MESSAGE, "Write message", CapabilityFieldType.Text, required = true),
-            CapabilityField(NfcWriteFields.WRITE_RECORD_TYPE, "Write record type", CapabilityFieldType.Text, required = true),
-            CapabilityField(NfcWriteFields.WRITE_SIZE_BYTES, "Write size bytes", CapabilityFieldType.Integer, required = true),
-            CapabilityField(NfcWriteFields.INTERVENTION_JSON, "Intervention JSON", CapabilityFieldType.Json, required = true),
-            CapabilityField(NfcWriteFields.POST_WRITE_EVIDENCE_JSON, "Post-write evidence JSON", CapabilityFieldType.Json, required = true)
+            MethodField(NfcWriteFields.WRITE_SUCCESS, "Write success", MethodFieldType.Boolean, required = true),
+            MethodField(NfcWriteFields.WRITE_MESSAGE, "Write message", MethodFieldType.Text, required = true),
+            MethodField(NfcWriteFields.WRITE_RECORD_TYPE, "Write record type", MethodFieldType.Text, required = true),
+            MethodField(NfcWriteFields.WRITE_SIZE_BYTES, "Write size bytes", MethodFieldType.Integer, required = true),
+            MethodField(NfcWriteFields.INTERVENTION_JSON, "Intervention JSON", MethodFieldType.Json, required = true),
+            MethodField(NfcWriteFields.POST_WRITE_EVIDENCE_JSON, "Post-write evidence JSON", MethodFieldType.Json, required = true)
         ) + evidenceFieldSchema() + researchEnvelopeSchema()
     )
 
@@ -147,14 +147,14 @@ class NfcWriteCapability : Capability {
     override fun Help() {
         Column(Modifier.padding(16.dp)) {
             Text("NFC Tag Write", fontWeight = FontWeight.Bold)
-            Text("This capability is an intervention. It attempts to write an NDEF text, URI, MIME or external record, records the action outcome and then returns a post-write NFC tag observation. It does not format non-NDEF tags and it does not handle ODK or other transport concerns.")
+            Text("This method is an intervention. It attempts to write an NDEF text, URI, MIME or external record, records the action outcome and then returns a post-write NFC tag observation. It does not format non-NDEF tags and it does not handle ODK or other transport concerns.")
         }
     }
 
-    override fun buildOutput(settingsState: SettingsState): CapabilityOutput = CapabilityOutput()
+    override fun buildOutput(settingsState: SettingsState): MethodOutput = MethodOutput()
 
-    override fun execute(request: CapabilityRequest): CapabilityResult {
-        return CapabilityResult(
+    override fun execute(request: MethodRequest): MethodResult {
+        return MethodResult(
             success = false,
             errorMessage = "NFC write is an interactive intervention. The shell starts a session, receives an Android Tag, and maps the action to Intervention plus post-write Evidence records."
         )

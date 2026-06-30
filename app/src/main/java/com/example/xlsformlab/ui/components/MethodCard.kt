@@ -24,9 +24,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityOutputValidator
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodOutputValidator
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsRepository
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.LaunchConfigParser
@@ -39,16 +39,16 @@ import com.example.xlsformlab.transport.odk.OdkAppearanceBuilder
 import com.example.xlsformlab.transport.odk.OdkIntentColumnBuilder
 
 @Composable
-fun CapabilityCard(
-    capability: Capability,
+fun MethodCard(
+    method: Method,
     modifier: Modifier = Modifier
 ) {
-    val settingsState = remember(capability.manifest.id) {
+    val settingsState = remember(method.manifest.id) {
         SettingsState(
-            settings = capability.settings,
+            settings = method.settings,
             onValueChanged = { settingId, value ->
                 SettingsRepository.save(
-                    capabilityId = capability.manifest.id,
+                    methodId = method.manifest.id,
                     settingId = settingId,
                     value = value
                 )
@@ -56,10 +56,10 @@ fun CapabilityCard(
         )
     }
 
-    LaunchedEffect(capability.manifest.id) {
+    LaunchedEffect(method.manifest.id) {
         val restoredSettings = SettingsRepository.load(
-            capabilityId = capability.manifest.id,
-            settings = capability.settings
+            methodId = method.manifest.id,
+            settings = method.settings
         )
         settingsState.restore(restoredSettings)
     }
@@ -72,18 +72,18 @@ fun CapabilityCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = capability.manifest.name,
+                text = method.manifest.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = capability.manifest.description,
+                text = method.manifest.description,
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
-                text = "${capability.manifest.status} • v${capability.manifest.version}",
+                text = "${method.manifest.status} • v${method.manifest.version}",
                 style = MaterialTheme.typography.labelMedium
             )
 
@@ -91,7 +91,7 @@ fun CapabilityCard(
                 title = "Demo",
                 initiallyExpanded = true
             ) {
-                capability.Demo(
+                method.Demo(
                     settingsState = settingsState
                 )
             }
@@ -100,7 +100,7 @@ fun CapabilityCard(
                 title = "Settings"
             ) {
                 SettingsRenderer(
-                    settings = capability.settings,
+                    settings = method.settings,
                     settingsState = settingsState
                 )
             }
@@ -108,14 +108,14 @@ fun CapabilityCard(
             ExpandableSection(
                 title = "Help"
             ) {
-                capability.Help()
+                method.Help()
             }
 
             ExpandableSection(
                 title = "Output"
             ) {
-                CapabilityOutputPanel(
-                    capability = capability,
+                MethodOutputPanel(
+                    method = method,
                     settingsState = settingsState
                 )
             }
@@ -123,10 +123,10 @@ fun CapabilityCard(
             ExpandableSection(
                 title = "Diagnostics"
             ) {
-                Text("ID: ${capability.manifest.id}")
-                Text("Version: ${capability.manifest.version}")
-                Text("Category: ${capability.manifest.category}")
-                Text("Status: ${capability.manifest.status}")
+                Text("ID: ${method.manifest.id}")
+                Text("Version: ${method.manifest.version}")
+                Text("Category: ${method.manifest.category}")
+                Text("Status: ${method.manifest.status}")
                 Text("Settings: ${settingsState.asMap()}")
             }
         }
@@ -134,14 +134,14 @@ fun CapabilityCard(
 }
 
 @Composable
-private fun CapabilityOutputPanel(
-    capability: Capability,
+private fun MethodOutputPanel(
+    method: Method,
     settingsState: SettingsState
 ) {
     val clipboardManager = LocalClipboardManager.current
-    val output = capability.buildOutput(settingsState)
-    val validation = CapabilityOutputValidator.validate(
-        schema = capability.outputSchema,
+    val output = method.buildOutput(settingsState)
+    val validation = MethodOutputValidator.validate(
+        schema = method.outputSchema,
         output = output
     )
 
@@ -168,25 +168,25 @@ private fun CapabilityOutputPanel(
 
     val launchPreview = when (launchTarget) {
         LaunchTarget.Appearance -> OdkAppearanceBuilder.build(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )
 
         LaunchTarget.IntentColumn -> OdkIntentColumnBuilder.build(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )
 
         LaunchTarget.AndroidIntentUri -> AndroidIntentUriBuilder.build(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )
 
         LaunchTarget.KotlinIntent -> KotlinIntentSnippetBuilder.build(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )
@@ -200,13 +200,13 @@ private fun CapabilityOutputPanel(
             fontWeight = FontWeight.Bold
         )
 
-        if (capability.outputSchema.fields.isEmpty()) {
+        if (method.outputSchema.fields.isEmpty()) {
             Text(
                 text = "No output schema declared.",
                 modifier = Modifier.padding(top = 4.dp)
             )
         } else {
-            capability.outputSchema.fields.forEach { field ->
+            method.outputSchema.fields.forEach { field ->
                 Text(
                     text = "${field.id}: ${field.type}${if (field.required) " required" else " optional"}",
                     modifier = Modifier.padding(top = 2.dp),
@@ -300,9 +300,9 @@ private fun CapabilityOutputPanel(
                 val parsed = LaunchConfigParser.parse(pastedLaunchText)
 
                 parserMessage = applyParsedLaunchConfig(
-                    capability = capability,
+                    method = method,
                     settingsState = settingsState,
-                    parsedCapabilityId = parsed.capabilityId,
+                    parsedMethodId = parsed.methodId,
                     parsedReturnMode = parsed.returnMode,
                     parsedSettings = parsed.settings
                 )
@@ -375,20 +375,20 @@ private fun CapabilityOutputPanel(
 }
 
 private fun applyParsedLaunchConfig(
-    capability: Capability,
+    method: Method,
     settingsState: SettingsState,
-    parsedCapabilityId: String?,
+    parsedMethodId: String?,
     parsedReturnMode: ReturnMode?,
     parsedSettings: Map<String, String>
 ): String {
-    if (parsedCapabilityId != null && parsedCapabilityId != capability.manifest.id) {
-        return "Parsed capability '${parsedCapabilityId}' does not match '${capability.manifest.id}'."
+    if (parsedMethodId != null && parsedMethodId != method.manifest.id) {
+        return "Parsed method '${parsedMethodId}' does not match '${method.manifest.id}'."
     }
 
     var applied = 0
     var skipped = 0
 
-    capability.settings.forEach { setting ->
+    method.settings.forEach { setting ->
         val value = parsedSettings[setting.id]
 
         if (value == null) {
@@ -410,7 +410,7 @@ private fun applyParsedLaunchConfig(
 
     val unknownCount = parsedSettings.keys
         .count { settingId ->
-            capability.settings.none { it.id == settingId }
+            method.settings.none { it.id == settingId }
         }
 
     val returnModeText = if (parsedReturnMode != null) {
@@ -423,12 +423,12 @@ private fun applyParsedLaunchConfig(
 }
 
 private fun applySettingValue(
-    setting: CapabilitySetting,
+    setting: MethodSetting,
     settingsState: SettingsState,
     value: String
 ): Boolean {
     return when (setting) {
-        is CapabilitySetting.BooleanSetting -> {
+        is MethodSetting.BooleanSetting -> {
             when (value.lowercase()) {
                 "true", "1", "yes" -> {
                     settingsState.setBoolean(setting.id, true)
@@ -444,7 +444,7 @@ private fun applySettingValue(
             }
         }
 
-        is CapabilitySetting.IntSetting -> {
+        is MethodSetting.IntSetting -> {
             value.toIntOrNull()?.let {
                 settingsState.setInt(
                     setting.id,
@@ -457,7 +457,7 @@ private fun applySettingValue(
             } ?: false
         }
 
-        is CapabilitySetting.FloatSetting -> {
+        is MethodSetting.FloatSetting -> {
             value.toFloatOrNull()?.let {
                 settingsState.setFloat(
                     setting.id,
@@ -470,12 +470,12 @@ private fun applySettingValue(
             } ?: false
         }
 
-        is CapabilitySetting.TextSetting -> {
+        is MethodSetting.TextSetting -> {
             settingsState.setString(setting.id, value)
             true
         }
 
-        is CapabilitySetting.ChoiceSetting -> {
+        is MethodSetting.ChoiceSetting -> {
             if (setting.choices.contains(value)) {
                 settingsState.setString(setting.id, value)
                 true

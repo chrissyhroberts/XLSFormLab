@@ -1,7 +1,7 @@
 package com.example.xlsformlab.core.as100
 
 enum class MethodObjectType {
-    Capability,
+    Method,
     DeviceService,
     SignalInterpreter,
     Rule,
@@ -28,8 +28,8 @@ data class MethodDescriptor(
     val parameters: Map<String, String> = emptyMap()
 ) : MethodObject
 
-data class CapabilityContract(
-    val capability: ArchitectureRef,
+data class MethodContract(
+    val method: ArchitectureRef,
     val acceptedSignals: List<String> = emptyList(),
     val requiredContext: List<String> = emptyList(),
     val producedKnowledgeTypes: List<KnowledgeObjectType> = emptyList(),

@@ -1,8 +1,8 @@
 package com.example.xlsformlab.core.as100.runtime
 
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityExecutionRequest
-import com.example.xlsformlab.core.CapabilityRuntime
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodExecutionRequest
+import com.example.xlsformlab.core.MethodRuntime
 import com.example.xlsformlab.core.ResearchContext
 import com.example.xlsformlab.core.as100.ArchitectureId
 import com.example.xlsformlab.core.as100.ArchitectureRef
@@ -18,31 +18,31 @@ import com.example.xlsformlab.core.as100.TransformationStatus
 import com.example.xlsformlab.settings.SettingsState
 
 /**
- * AS1.00 execution bridge for existing XLSForm Lab capabilities.
+ * AS1.00 execution bridge for existing ResearchOS methods.
  *
  * This adapter lets new AS1.00 code use ExecutionRequest / ExecutionResult while
- * current capabilities still run through the legacy CapabilityRuntime. The only
+ * current methods still run through the legacy MethodRuntime. The only
  * lossy conversion happens at the legacy boundary, where typed AS1.00 context
  * and signal payload values are converted to strings.
  */
-object As100CapabilityRuntime {
+object As100MethodRuntime {
 
-    fun methodRef(capability: Capability): ArchitectureRef = ArchitectureRef(
-        id = ArchitectureId(capability.manifest.id),
-        type = MethodObjectType.Capability.name,
-        label = capability.manifest.name
+    fun methodRef(method: Method): ArchitectureRef = ArchitectureRef(
+        id = ArchitectureId(method.manifest.id),
+        type = MethodObjectType.Method.name,
+        label = method.manifest.name
     )
 
     fun requestFor(
-        capability: Capability,
-        action: String = capability.manifest.id,
+        method: Method,
+        action: String = method.manifest.id,
         context: Map<String, String> = emptyMap(),
         signals: List<Signal> = emptyList(),
         inputs: List<ArchitectureRef> = emptyList(),
         temporalContext: TemporalContext = TemporalContext()
     ): ExecutionRequest = ExecutionRequest(
         action = action,
-        method = methodRef(capability),
+        method = methodRef(method),
         context = context,
         signals = signals,
         inputs = inputs,
@@ -50,7 +50,7 @@ object As100CapabilityRuntime {
     )
 
     fun execute(
-        capability: Capability,
+        method: Method,
         request: ExecutionRequest,
         settingsState: SettingsState? = null,
         transport: String? = null
@@ -61,10 +61,10 @@ object As100CapabilityRuntime {
             signals = request.signals
         )
 
-        val legacy = CapabilityRuntime.execute(
-            capability = capability,
-            request = CapabilityExecutionRequest(
-                capabilityId = capability.manifest.id,
+        val legacy = MethodRuntime.execute(
+            method = method,
+            request = MethodExecutionRequest(
+                methodId = method.manifest.id,
                 context = ResearchContext(values = legacyContext),
                 parameters = legacyParameters,
                 transport = transport
@@ -74,9 +74,9 @@ object As100CapabilityRuntime {
 
         val status = if (legacy.success) TransformationStatus.Succeeded else TransformationStatus.Failed
         val provenance = ProvenanceContext(
-            provider = "xlsformlab.capability_runtime",
-            methodId = capability.manifest.id,
-            methodVersion = capability.manifest.version
+            provider = "xlsformlab.method_runtime",
+            methodId = method.manifest.id,
+            methodVersion = method.manifest.version
         )
 
         val diagnostics: Map<String, String> = buildMap {
@@ -88,7 +88,7 @@ object As100CapabilityRuntime {
 
         val observation = legacy.artifact?.let { artifact ->
             Observation(
-                phenomenon = "capability.output.${capability.manifest.id}",
+                phenomenon = "method.output.${method.manifest.id}",
                 values = stringifyMap(artifact.output.fields),
                 temporalContext = request.temporalContext,
                 provenance = provenance

@@ -12,8 +12,8 @@ import java.nio.charset.Charset
 import java.util.Locale
 
 object NfcStandardFields {
-    const val CAPABILITY_ID = "capability_id"
-    const val CAPABILITY_VERSION = "capability_version"
+    const val CAPABILITY_ID = "method_id"
+    const val CAPABILITY_VERSION = "method_version"
     const val OPERATION = "operation"
     const val OBSERVED_AT_EPOCH_MS = "observed_at_epoch_ms"
     const val DEVICE_MANUFACTURER = "device_manufacturer"
@@ -65,7 +65,7 @@ data class NfcWriteObservation(
 
 object NfcTagCodec {
 
-    fun read(tag: Tag, capabilityId: String, capabilityVersion: String, operation: String): NfcReadObservation {
+    fun read(tag: Tag, methodId: String, methodVersion: String, operation: String): NfcReadObservation {
         val fields = linkedMapOf<String, String>()
         val observedAt = System.currentTimeMillis()
         val idBytes = tag.id ?: ByteArray(0)
@@ -73,8 +73,8 @@ object NfcTagCodec {
         val ndefMessage = readNdefMessage(ndef)
         val records = ndefMessage?.records?.asList() ?: emptyList()
 
-        fields[NfcStandardFields.CAPABILITY_ID] = capabilityId
-        fields[NfcStandardFields.CAPABILITY_VERSION] = capabilityVersion
+        fields[NfcStandardFields.CAPABILITY_ID] = methodId
+        fields[NfcStandardFields.CAPABILITY_VERSION] = methodVersion
         fields[NfcStandardFields.OPERATION] = operation
         fields[NfcStandardFields.OBSERVED_AT_EPOCH_MS] = observedAt.toString()
         fields[NfcStandardFields.DEVICE_MANUFACTURER] = Build.MANUFACTURER.orEmpty()
@@ -107,12 +107,12 @@ object NfcTagCodec {
         return NfcReadObservation(fields = fields, json = JSONObject(fields).toString())
     }
 
-    fun write(tag: Tag, request: NfcWriteRequest, capabilityId: String, capabilityVersion: String): NfcWriteObservation {
+    fun write(tag: Tag, request: NfcWriteRequest, methodId: String, methodVersion: String): NfcWriteObservation {
         val record = buildRecord(request)
         val message = NdefMessage(arrayOf(record))
         val sizeBytes = message.toByteArray().size
         val writeResult = writeNdefMessage(tag, message, sizeBytes)
-        val readBack = read(tag, capabilityId, capabilityVersion, operation = "write")
+        val readBack = read(tag, methodId, methodVersion, operation = "write")
         val fields = linkedMapOf<String, String>()
         fields.putAll(readBack.fields)
         fields[NfcStandardFields.WRITE_SUCCESS] = writeResult.first.toString()

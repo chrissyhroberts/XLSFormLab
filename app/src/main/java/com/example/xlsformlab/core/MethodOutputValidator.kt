@@ -1,16 +1,16 @@
 package com.example.xlsformlab.core
 
-data class CapabilityOutputValidation(
+data class MethodOutputValidation(
     val valid: Boolean,
     val messages: List<String> = emptyList()
 )
 
-object CapabilityOutputValidator {
+object MethodOutputValidator {
 
     fun validate(
-        schema: CapabilityOutputSchema,
-        output: CapabilityOutput
-    ): CapabilityOutputValidation {
+        schema: MethodOutputSchema,
+        output: MethodOutput
+    ): MethodOutputValidation {
         val messages = mutableListOf<String>()
 
         schema.fields
@@ -34,7 +34,7 @@ object CapabilityOutputValidator {
             }
         }
 
-        return CapabilityOutputValidation(
+        return MethodOutputValidation(
             valid = messages.isEmpty(),
             messages = messages
         )
@@ -42,14 +42,14 @@ object CapabilityOutputValidator {
 
     private fun matchesType(
         value: Any,
-        type: CapabilityFieldType
+        type: MethodFieldType
     ): Boolean {
         return when (type) {
-            CapabilityFieldType.Text -> value is String
-            CapabilityFieldType.Integer -> value is Int || value is Long
-            CapabilityFieldType.Float -> value is Float || value is Double || value is Int || value is Long
-            CapabilityFieldType.Boolean -> value is Boolean
-            CapabilityFieldType.Json -> true
+            MethodFieldType.Text -> value is String
+            MethodFieldType.Integer -> value is Int || value is Long
+            MethodFieldType.Float -> value is Float || value is Double || value is Int || value is Long
+            MethodFieldType.Boolean -> value is Boolean
+            MethodFieldType.Json -> true
         }
     }
 }

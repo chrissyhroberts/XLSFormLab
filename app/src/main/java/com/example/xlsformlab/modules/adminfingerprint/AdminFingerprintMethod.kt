@@ -15,32 +15,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityCategory
-import com.example.xlsformlab.core.CapabilityField
-import com.example.xlsformlab.core.CapabilityFieldType
-import com.example.xlsformlab.core.CapabilityManifest
-import com.example.xlsformlab.core.CapabilityOutput
-import com.example.xlsformlab.core.CapabilityOutputSchema
-import com.example.xlsformlab.core.CapabilityRequest
-import com.example.xlsformlab.core.CapabilityResult
-import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodField
+import com.example.xlsformlab.core.MethodFieldType
+import com.example.xlsformlab.core.MethodManifest
+import com.example.xlsformlab.core.MethodOutput
+import com.example.xlsformlab.core.MethodOutputSchema
+import com.example.xlsformlab.core.MethodRequest
+import com.example.xlsformlab.core.MethodResult
+import com.example.xlsformlab.core.MethodStatus
 import com.example.xlsformlab.core.ResearchActivity
 import com.example.xlsformlab.core.ResearchActivityKind
 import com.example.xlsformlab.platform.BiometricAuthHelper
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 import java.time.Instant
 
-class AdminFingerprintCapability : Capability {
+class AdminFingerprintMethod : Method {
 
-    override val manifest = CapabilityManifest(
+    override val manifest = MethodManifest(
         id = "admin_fingerprint_confirmation",
         name = "Admin Fingerprint Confirmation",
         description = "Request biometric or PIN confirmation from the registered device administrator.",
         version = "0.1.0",
-        category = CapabilityCategory.Utilities,
-        status = CapabilityStatus.Experimental,
+        category = MethodCategory.Utilities,
+        status = MethodStatus.Experimental,
         activities = listOf(
             ResearchActivity(
                 id = "admin_fingerprint.attest",
@@ -54,43 +54,43 @@ class AdminFingerprintCapability : Capability {
     )
 
     override val settings = listOf(
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "prompt_title",
             label = "Prompt title",
             group = "Prompt",
             defaultValue = "Admin confirmation required"
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "prompt_subtitle",
             label = "Prompt subtitle",
             group = "Prompt",
             defaultValue = "Use fingerprint, face unlock, PIN, pattern, or password to continue"
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "prompt_description",
             label = "Prompt description",
             group = "Prompt",
             defaultValue = "Confirm that a registered phone administrator is present."
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "cancel_text",
             label = "Cancel text",
             group = "Prompt",
             defaultValue = "Cancel"
         ),
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "confirmation_reason",
             label = "Confirmation reason",
             group = "Output",
             defaultValue = "admin_confirm"
         ),
-        CapabilitySetting.BooleanSetting(
+        MethodSetting.BooleanSetting(
             id = "confirmation_required",
             label = "Require explicit confirmation",
             group = "Security",
             defaultValue = true
         ),
-        CapabilitySetting.BooleanSetting(
+        MethodSetting.BooleanSetting(
             id = "allow_device_credential",
             label = "Allow PIN/pattern/password fallback",
             group = "Security",
@@ -98,42 +98,42 @@ class AdminFingerprintCapability : Capability {
         )
     )
 
-    override val outputSchema = CapabilityOutputSchema(
+    override val outputSchema = MethodOutputSchema(
         fields = listOf(
-            CapabilityField(
+            MethodField(
                 id = "confirmed",
                 label = "Confirmed",
-                type = CapabilityFieldType.Boolean,
+                type = MethodFieldType.Boolean,
                 required = true
             ),
-            CapabilityField(
+            MethodField(
                 id = "auth_method",
                 label = "Authentication method",
-                type = CapabilityFieldType.Text,
+                type = MethodFieldType.Text,
                 required = true
             ),
-            CapabilityField(
+            MethodField(
                 id = "timestamp_ms",
                 label = "Timestamp milliseconds",
-                type = CapabilityFieldType.Integer,
+                type = MethodFieldType.Integer,
                 required = true
             ),
-            CapabilityField(
+            MethodField(
                 id = "timestamp_iso",
                 label = "Timestamp ISO",
-                type = CapabilityFieldType.Text,
+                type = MethodFieldType.Text,
                 required = true
             ),
-            CapabilityField(
+            MethodField(
                 id = "reason",
                 label = "Reason",
-                type = CapabilityFieldType.Text,
+                type = MethodFieldType.Text,
                 required = false
             ),
-            CapabilityField(
+            MethodField(
                 id = "message",
                 label = "Message",
-                type = CapabilityFieldType.Text,
+                type = MethodFieldType.Text,
                 required = false
             )
         )
@@ -215,8 +215,8 @@ class AdminFingerprintCapability : Capability {
 
     override fun buildOutput(
         settingsState: SettingsState
-    ): CapabilityOutput {
-        return CapabilityOutput(
+    ): MethodOutput {
+        return MethodOutput(
             fields = mapOf(
                 "confirmed" to settingsState.getBoolean("confirmed"),
                 "auth_method" to settingsState.getString("auth_method").ifBlank { "none" },
@@ -233,13 +233,13 @@ class AdminFingerprintCapability : Capability {
         Text(
             "Requests confirmation using Android BiometricPrompt. " +
                 "Depending on device settings, this can use fingerprint, face unlock, PIN, pattern, or password. " +
-                "No fingerprint data is accessed or stored by XLSForm Lab."
+                "No fingerprint data is accessed or stored by ResearchOS."
         )
     }
 
     override fun execute(
-        request: CapabilityRequest
-    ): CapabilityResult {
-        return CapabilityResult(success = true)
+        request: MethodRequest
+    ): MethodResult {
+        return MethodResult(success = true)
     }
 }

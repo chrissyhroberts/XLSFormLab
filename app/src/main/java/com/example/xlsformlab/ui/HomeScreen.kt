@@ -26,9 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.calibration.CalibrationScreen
-import com.example.xlsformlab.core.CapabilityCategory
-import com.example.xlsformlab.core.CapabilityRegistry
-import com.example.xlsformlab.ui.components.CapabilityCard
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodRegistry
+import com.example.xlsformlab.ui.components.MethodCard
 import com.example.xlsformlab.ui.sensors.SensorDashboard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +37,7 @@ fun HomeScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("XLSForm Lab Runtime") }
+                title = { Text("ResearchOS Runtime") }
             )
         }
     ) { padding ->
@@ -50,8 +50,8 @@ fun HomeScreen() {
             item { CalibrationCard() }
             item { SensorDashboardCard() }
 
-            items(CapabilityRegistry.categoriesInUse()) { category ->
-                CapabilityCategoryCard(category = category)
+            items(MethodRegistry.categoriesInUse()) { category ->
+                MethodCategoryCard(category = category)
             }
         }
     }
@@ -67,17 +67,17 @@ private fun RuntimeSummaryCard() {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Capability runtime",
+                text = "Method runtime",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "ODK remains the canonical form engine. XLSForm Lab executes specialised research capabilities and returns validated evidence.",
+                text = "ODK remains the canonical form engine. ResearchOS executes specialised research methods and returns validated evidence.",
                 modifier = Modifier.padding(top = 4.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Installed capabilities: ${CapabilityRegistry.all().size}",
+                text = "Installed methods: ${MethodRegistry.all().size}",
                 modifier = Modifier.padding(top = 8.dp),
                 style = MaterialTheme.typography.labelMedium
             )
@@ -150,8 +150,8 @@ private fun SensorDashboardCard() {
 }
 
 @Composable
-private fun CapabilityCategoryCard(category: CapabilityCategory) {
-    val capabilities = CapabilityRegistry.byCategory(category)
+private fun MethodCategoryCard(category: MethodCategory) {
+    val methods = MethodRegistry.byCategory(category)
     var expanded by remember { mutableStateOf(true) }
 
     ElevatedCard(
@@ -174,7 +174,7 @@ private fun CapabilityCategoryCard(category: CapabilityCategory) {
                 )
 
                 Text(
-                    text = capabilities.size.toString(),
+                    text = methods.size.toString(),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -182,13 +182,13 @@ private fun CapabilityCategoryCard(category: CapabilityCategory) {
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
 
-                if (capabilities.isEmpty()) {
-                    Text("No capabilities installed.")
+                if (methods.isEmpty()) {
+                    Text("No methods installed.")
                 }
 
-                capabilities.forEach { capability ->
-                    CapabilityCard(
-                        capability = capability,
+                methods.forEach { method ->
+                    MethodCard(
+                        method = method,
                         modifier = Modifier.padding(top = 12.dp)
                     )
                 }

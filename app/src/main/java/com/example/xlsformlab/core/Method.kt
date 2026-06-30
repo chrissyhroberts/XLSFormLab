@@ -1,23 +1,23 @@
 package com.example.xlsformlab.core
 
 import androidx.compose.runtime.Composable
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 
 /**
- * A capability is a transport-independent research instrument.
+ * A method is a transport-independent research instrument.
  *
- * It may be launched from ODK, demoed inside XLSForm Lab, or invoked by a future protocol runner.
+ * It may be launched from ODK, demoed inside ResearchOS, or invoked by a future protocol runner.
  * Implementations should declare their manifest, settings, output schema, and a small UI/demo surface.
  */
-interface Capability {
+interface Method {
 
-    val manifest: CapabilityManifest
+    val manifest: MethodManifest
 
-    val settings: List<CapabilitySetting>
+    val settings: List<MethodSetting>
 
-    val outputSchema: CapabilityOutputSchema
-        get() = CapabilityOutputSchema()
+    val outputSchema: MethodOutputSchema
+        get() = MethodOutputSchema()
 
     @Composable
     fun Demo(
@@ -32,19 +32,19 @@ interface Capability {
      */
     fun buildOutput(
         settingsState: SettingsState
-    ): CapabilityOutput {
-        return CapabilityOutput()
+    ): MethodOutput {
+        return MethodOutput()
     }
 
     /**
      * Legacy direct execution hook. Kept deliberately simple so existing modules continue to work.
-     * Newer integrations should call CapabilityRuntime.execute so context, validation and provenance
+     * Newer integrations should call MethodRuntime.execute so context, validation and provenance
      * are handled consistently.
      */
     fun execute(
-        request: CapabilityRequest
-    ): CapabilityResult {
-        return CapabilityResult(
+        request: MethodRequest
+    ): MethodResult {
+        return MethodResult(
             success = true,
             fields = emptyMap()
         )

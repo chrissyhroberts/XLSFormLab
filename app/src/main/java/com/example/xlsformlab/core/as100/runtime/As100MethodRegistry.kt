@@ -1,42 +1,42 @@
 package com.example.xlsformlab.core.as100.runtime
 
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityCategory
-import com.example.xlsformlab.core.CapabilityManifest
-import com.example.xlsformlab.core.as100.CapabilityContract
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodManifest
+import com.example.xlsformlab.core.as100.MethodContract
 import com.example.xlsformlab.core.as100.MethodDescriptor
-import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintCapability
-import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleCapability
+import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintMethod
+import com.example.xlsformlab.modules.calibratedscale.As100CalibratedScaleMethod
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleMethod
-import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorCapability
-import com.example.xlsformlab.modules.nfc.NfcReadCapability
+import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorMethod
+import com.example.xlsformlab.modules.nfc.As100NfcReadMethod
 import com.example.xlsformlab.modules.nfc.NfcReadMethod
-import com.example.xlsformlab.modules.nfc.NfcWriteCapability
+import com.example.xlsformlab.modules.nfc.NfcWriteMethod
 
 /**
  * Canonical AS1.00-facing registry of executable methods.
  *
- * During migration, existing Capability implementations are owned here and
+ * During migration, existing Method implementations are owned here and
  * exposed as As100Method instances via a legacy adapter. The old
- * CapabilityRegistry now delegates to this registry so the conceptual centre of
- * the app is Method, not Capability.
+ * MethodRegistry now delegates to this registry so the conceptual centre of
+ * the app is Method, not legacy methods.
  */
 object As100MethodRegistry {
 
-    private val legacyCapabilities: List<Capability> by lazy {
+    private val legacyMethods: List<Method> by lazy {
         listOf(
-            CalibratedScaleCapability(),
-            AdminFingerprintCapability(),
-            GpsTargetNavigatorCapability(),
-            NfcReadCapability(),
-            NfcWriteCapability()
+            CalibratedScaleMethod(),
+            AdminFingerprintMethod(),
+            GpsTargetNavigatorMethod(),
+            NfcReadMethod(),
+            NfcWriteMethod()
         )
     }
 
     private val methods: List<As100Method> by lazy {
-        listOf(NfcReadMethod, CalibratedScaleMethod) + legacyCapabilities
-            .filterNot { capability -> capability.manifest.id in setOf(NfcReadMethod.ID, CalibratedScaleMethod.ID) }
-            .map { capability -> As100CapabilityMethod(capability) }
+        listOf(As100NfcReadMethod, As100CalibratedScaleMethod) + legacyMethods
+            .filterNot { method -> method.manifest.id in setOf(As100NfcReadMethod.ID, As100CalibratedScaleMethod.ID) }
+            .map { method -> As100LegacyMethodAdapter(method) }
     }
 
     fun all(): List<As100Method> = methods
@@ -50,24 +50,24 @@ object As100MethodRegistry {
     fun descriptors(): List<MethodDescriptor> =
         methods.map { it.descriptor }
 
-    fun contracts(): List<CapabilityContract> =
+    fun contracts(): List<MethodContract> =
         methods.map { it.contract }
 
     /** Legacy compatibility surface for UI/transport still being migrated. */
-    fun legacyCapabilities(): List<Capability> = legacyCapabilities
+    fun legacyMethods(): List<Method> = legacyMethods
 
-    fun legacyFind(id: String): Capability? =
-        legacyCapabilities.firstOrNull { it.manifest.id == id }
+    fun legacyFind(id: String): Method? =
+        legacyMethods.firstOrNull { it.manifest.id == id }
 
-    fun legacyRequire(id: String): Capability =
-        legacyFind(id) ?: error("No legacy capability registered with id: $id")
+    fun legacyRequire(id: String): Method =
+        legacyFind(id) ?: error("No legacy method registered with id: $id")
 
-    fun legacyByCategory(category: CapabilityCategory): List<Capability> =
-        legacyCapabilities.filter { it.manifest.category == category }
+    fun legacyByCategory(category: MethodCategory): List<Method> =
+        legacyMethods.filter { it.manifest.category == category }
 
-    fun legacyCategoriesInUse(): List<CapabilityCategory> =
-        legacyCapabilities.map { it.manifest.category }.distinct()
+    fun legacyCategoriesInUse(): List<MethodCategory> =
+        legacyMethods.map { it.manifest.category }.distinct()
 
-    fun legacyManifests(): List<CapabilityManifest> =
-        legacyCapabilities.map { it.manifest }
+    fun legacyManifests(): List<MethodManifest> =
+        legacyMethods.map { it.manifest }
 }

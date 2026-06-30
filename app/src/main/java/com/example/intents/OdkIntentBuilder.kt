@@ -1,13 +1,13 @@
 package com.example.xlsformlab.intents
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.settings.SettingsState
 import java.net.URLEncoder
 
 object OdkIntentBuilder {
 
     fun buildAppearanceColumnValue(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: String
     ): String {
@@ -18,29 +18,29 @@ object OdkIntentBuilder {
             }
             .joinToString(";")
 
-        return "xlsformlab(capability=${capability.manifest.id};return_mode=$returnMode;$settings)"
+        return "xlsformlab(method=${method.manifest.id};return_mode=$returnMode;$settings)"
     }
 
     fun buildIntentColumnValue(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: String
     ): String {
         return buildAndroidIntentUri(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )
     }
 
     fun buildAndroidIntentUri(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: String
     ): String {
         val extras = mutableListOf<String>()
 
-        extras += "S.capability_id=${capability.manifest.id}"
+        extras += "S.method_id=${method.manifest.id}"
         extras += "S.return_mode=$returnMode"
 
         settingsState.asMap().toSortedMap().forEach { (key, value) ->
@@ -55,7 +55,7 @@ object OdkIntentBuilder {
 
         return buildString {
             append("intent:#Intent;")
-            append("action=com.example.xlsformlab.RUN_CAPABILITY;")
+            append("action=com.example.xlsformlab.RUN_METHOD;")
             append("package=com.example.xlsformlab;")
             append(extras.joinToString(separator = ";"))
             append(";end")
@@ -63,12 +63,12 @@ object OdkIntentBuilder {
     }
 
     fun buildKotlinIntentSnippet(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: String
     ): String {
         val extras = mutableListOf<String>()
-        extras += ".putExtra(\"capability_id\", \"${capability.manifest.id}\")"
+        extras += ".putExtra(\"method_id\", \"${method.manifest.id}\")"
         extras += ".putExtra(\"return_mode\", \"$returnMode\")"
 
         settingsState.asMap().toSortedMap().forEach { (key, value) ->
@@ -80,7 +80,7 @@ object OdkIntentBuilder {
         }
 
         return buildString {
-            append("Intent(\"com.example.xlsformlab.RUN_CAPABILITY\")\n")
+            append("Intent(\"com.example.xlsformlab.RUN_METHOD\")\n")
             append("    .setPackage(\"com.example.xlsformlab\")\n")
             append(extras.joinToString("\n") { "    $it" })
         }

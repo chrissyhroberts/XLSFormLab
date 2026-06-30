@@ -1,123 +1,111 @@
 package com.example.xlsformlab.modules.nfc
 
-import com.example.xlsformlab.core.as100.ArchitectureId
-import com.example.xlsformlab.core.as100.ArchitectureRef
-import com.example.xlsformlab.core.as100.CapabilityContract
-import com.example.xlsformlab.core.as100.ExecutionRequest
-import com.example.xlsformlab.core.as100.ExecutionResult
-import com.example.xlsformlab.core.as100.KnowledgeObjectType
-import com.example.xlsformlab.core.as100.MethodDescriptor
-import com.example.xlsformlab.core.as100.MethodObjectType
-import com.example.xlsformlab.core.as100.ProvenanceContext
-import com.example.xlsformlab.core.as100.Signal
-import com.example.xlsformlab.core.as100.Transformation
-import com.example.xlsformlab.core.as100.TransformationStatus
-import com.example.xlsformlab.core.as100.runtime.As100ExecutionEngine
-import com.example.xlsformlab.core.as100.runtime.As100Method
-import com.example.xlsformlab.platform.nfc.AndroidNfcDeviceService
-import com.example.xlsformlab.platform.nfc.NfcTagSignal
+import androidx.compose.runtime.Composable
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodField
+import com.example.xlsformlab.core.MethodFieldType
+import com.example.xlsformlab.core.MethodManifest
+import com.example.xlsformlab.core.MethodOutput
+import com.example.xlsformlab.core.MethodOutputSchema
+import com.example.xlsformlab.core.MethodRequest
+import com.example.xlsformlab.core.MethodResult
+import com.example.xlsformlab.core.MethodStatus
+import com.example.xlsformlab.presentation.nfc.NfcReadDemoScreen
+import com.example.xlsformlab.presentation.nfc.NfcReadHelpScreen
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 
-/**
- * Native AS1.00 method for NFC tag reads.
- *
- * This is the first capability migrated out of the legacy Capability abstraction.
- * The old NfcReadCapability now exists only as a compatibility shell for the
- * existing launcher; runtime-facing code should use this method directly.
- */
-object NfcReadMethod : As100Method {
-    const val ID = "nfc_tag_read"
-    const val VERSION = "0.3.0"
+class NfcReadMethod : Method {
 
-    override val id: String = ID
-
-    override val ref: ArchitectureRef = ArchitectureRef(
-        id = ArchitectureId(ID),
-        type = "Method",
-        label = "NFC Tag Read"
-    )
-
-    override val descriptor: MethodDescriptor = MethodDescriptor(
-        id = ArchitectureId(ID),
-        methodType = MethodObjectType.SignalInterpreter,
+    override val manifest = MethodManifest(
+        id = ID,
         name = "NFC Tag Read",
+        description = "Identify and observe an NFC tag as structured evidence plus immutable tag artifact.",
         version = VERSION,
-        description = "Interpret an NFC tag-discovery signal as structured observation evidence and an immutable NFC tag artifact.",
-        inputs = listOf(AndroidNfcDeviceService.SIGNAL_TYPE_TAG_DISCOVERED),
-        outputs = NfcEvidenceFields.tagOutputFields + researchEnvelopeSchema().map { it.id },
-        parameters = mapOf(
-            "category" to "NFC",
-            "status" to "Experimental",
-            "device_service" to AndroidNfcDeviceService.SERVICE_ID
+        category = MethodCategory.NFC,
+        status = MethodStatus.Experimental
+    )
+
+    override val settings = listOf(
+        MethodSetting.BooleanSetting(
+            id = "read_once",
+            label = "Read once",
+            description = "Stop updating the observation after the first tag is read.",
+            group = "Capture",
+            defaultValue = true
+        ),
+        MethodSetting.TextSetting(
+            id = "field_filter",
+            label = "Field filter",
+            description = "Optional comma-separated list of evidence fields to expose to transport. Leave blank for all standard tag fields.",
+            group = "Output",
+            defaultValue = ""
         )
     )
 
-    override val contract: CapabilityContract = CapabilityContract(
-        capability = ref,
-        acceptedSignals = listOf(AndroidNfcDeviceService.SIGNAL_TYPE_TAG_DISCOVERED),
-        requiredContext = emptyList(),
-        producedKnowledgeTypes = listOf(KnowledgeObjectType.Observation),
-        producedFields = descriptor.outputs
+    override val outputSchema = MethodOutputSchema(
+        fields = evidenceFieldSchema() + researchEnvelopeSchema()
     )
 
-    override fun request(
-        action: String,
-        context: Map<String, String>,
-        signals: List<Signal>,
-        inputs: List<ArchitectureRef>
-    ): ExecutionRequest = As100ExecutionEngine.request(
-        action = action,
-        method = ref,
-        context = context,
-        signals = signals,
-        inputs = inputs
-    )
+    @Composable
+    override fun Demo(settingsState: SettingsState) {
+        NfcReadDemoScreen(settingsState)
+    }
 
-    override fun execute(
-        request: ExecutionRequest,
-        settingsState: SettingsState?,
-        transport: String?
-    ): ExecutionResult {
-        val signal = request.signals.firstOrNull()
-        if (signal == null) {
-            return As100ExecutionEngine.complete(
-                request = request,
-                status = TransformationStatus.Unsupported,
-                diagnostics = mapOf(
-                    "reason" to "NFC read requires a live NfcTagSignal from the Android NFC Device Service."
-                )
-            )
-        }
+    @Composable
+    override fun Help() {
+        NfcReadHelpScreen()
+    }
 
-        val transformation = Transformation(
-            action = "interpret.nfc.signal",
-            method = ref,
-            inputs = listOf(ArchitectureRef(signal.id, signal.objectType, signal.signalType)),
-            status = TransformationStatus.Unsupported,
-            diagnostics = mapOf(
-                "reason" to "A generic Signal does not contain the Android Tag handle needed for NDEF decoding. Use read(tagSignal) from the NFC Device Service path."
-            ),
-            temporalContext = signal.temporalContext,
-            provenance = ProvenanceContext(
-                provider = signal.provenance.provider,
-                methodId = ID,
-                methodVersion = VERSION
-            )
-        )
-        return As100ExecutionEngine.complete(
-            request = request,
-            status = TransformationStatus.Unsupported,
-            transformations = listOf(transformation),
-            diagnostics = transformation.diagnostics
+    override fun buildOutput(settingsState: SettingsState): MethodOutput = MethodOutput()
+
+    override fun execute(request: MethodRequest): MethodResult {
+        return MethodResult(
+            success = false,
+            errorMessage = "NFC read is an interactive device capture. The shell starts a session, receives an Android Tag, and maps it to Evidence/Artifact records."
         )
     }
 
-    fun read(tagSignal: NfcTagSignal): NfcReadEvidenceBundle =
-        NfcTagRepository.readTagSignal(
-            tagSignal = tagSignal,
-            capabilityId = ID,
-            capabilityVersion = VERSION,
-            methodObjectType = "Method",
-            methodLabel = "NFC Tag Read"
-        )
+    companion object {
+        const val ID = "nfc_tag_read"
+        const val VERSION = "0.3.0"
+    }
 }
+
+internal fun parseFieldFilter(value: String): Set<String> =
+    value.split(',').map { it.trim() }.filter { it.isNotBlank() }.toSet()
+
+internal fun applyFieldFilter(fields: Map<String, String>, filter: Set<String>): Map<String, String> =
+    if (filter.isEmpty()) fields else fields.filterKeys { it in filter }
+
+internal fun evidenceFieldSchema(): List<MethodField> =
+    NfcEvidenceFields.tagOutputFields.map { key ->
+        MethodField(
+            id = key,
+            label = key,
+            type = if (key.endsWith("_json")) MethodFieldType.Json else MethodFieldType.Text,
+            required = key == NfcEvidenceFields.TAG_UID_HEX
+        )
+    }
+
+internal fun researchEnvelopeSchema(): List<MethodField> = listOf(
+    MethodField(ResearchOutputFields.EVIDENCE_ID, "Evidence ID", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.EVIDENCE_KIND, "Evidence kind", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.PHENOMENON, "Phenomenon", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.METHOD, "Method", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.TEMPORAL_SEMANTICS, "Temporal semantics", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.AGGREGATION_SEMANTICS, "Aggregation semantics", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.LINEAGE, "Lineage", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.PROVENANCE_JSON, "Provenance JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.CAPTURE_OUTCOME_JSON, "Capture outcome JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.QUALITY_JSON, "Quality JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.VALIDATION_JSON, "Validation JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.ARTIFACT_JSON, "Artifact JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.EVIDENCE_JSON, "Evidence JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.EXECUTION_JSON, "Execution JSON", MethodFieldType.Json, required = true),
+    MethodField(ResearchOutputFields.AS_SIGNAL_TYPE, "AS1.00 signal type", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.AS_SIGNAL_SOURCE_SERVICE, "AS1.00 signal source service", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.AS_TRANSFORMATION_ACTION, "AS1.00 transformation action", MethodFieldType.Text, required = true),
+    MethodField(ResearchOutputFields.AS_TRANSFORMATION_STATUS, "AS1.00 transformation status", MethodFieldType.Text, required = true)
+)

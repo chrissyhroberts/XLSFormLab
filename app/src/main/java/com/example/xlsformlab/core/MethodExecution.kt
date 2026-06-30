@@ -3,71 +3,71 @@ package com.example.xlsformlab.core
 import com.example.xlsformlab.settings.SettingsState
 
 /**
- * Canonical runtime request. Existing capabilities can still use CapabilityRequest directly;
+ * Canonical runtime request. Existing methods can still use MethodRequest directly;
  * this wrapper is the stable ResearchOS-aligned execution envelope.
  */
-data class CapabilityExecutionRequest(
-    val capabilityId: String,
+data class MethodExecutionRequest(
+    val methodId: String,
     val context: ResearchContext = ResearchContext(),
     val parameters: Map<String, String> = emptyMap(),
     val transport: String? = null
 )
 
-data class CapabilityExecutionResult(
+data class MethodExecutionResult(
     val success: Boolean,
     val artifact: EvidenceArtifact? = null,
     val errorMessage: String? = null,
     val warnings: List<String> = emptyList()
 )
 
-object CapabilityRuntime {
+object MethodRuntime {
 
     fun execute(
-        capability: Capability,
-        request: CapabilityExecutionRequest,
+        method: Method,
+        request: MethodExecutionRequest,
         settingsState: SettingsState? = null
-    ): CapabilityExecutionResult {
-        val missingContext = request.context.missing(capability.manifest.requiredContext)
+    ): MethodExecutionResult {
+        val missingContext = request.context.missing(method.manifest.requiredContext)
         val contextWarnings = missingContext.map { key -> "Missing context: $key" }
 
-        val legacyResult = capability.execute(
-            CapabilityRequest(parameters = request.parameters + request.context.values)
+        val legacyResult = method.execute(
+            MethodRequest(parameters = request.parameters + request.context.values)
         )
 
         if (!legacyResult.success) {
-            return CapabilityExecutionResult(
+            return MethodExecutionResult(
                 success = false,
-                errorMessage = legacyResult.errorMessage ?: "Capability execution failed.",
+                errorMessage = legacyResult.errorMessage ?: "Method execution failed.",
                 warnings = contextWarnings
             )
         }
 
         val output = when {
-            legacyResult.fields.isNotEmpty() -> CapabilityOutput(legacyResult.fields)
-            settingsState != null -> capability.buildOutput(settingsState)
-            else -> CapabilityOutput(
+            legacyResult.fields.isNotEmpty() -> MethodOutput(legacyResult.fields)
+            settingsState != null -> method.buildOutput(settingsState)
+            else -> MethodOutput(
                 legacyResult.json?.let { mapOf("json" to it) } ?: emptyMap()
             )
         }
 
-        val validation = CapabilityOutputValidator.validate(
-            schema = capability.outputSchema,
+        val validation = MethodOutputValidator.validate(
+            schema = method.outputSchema,
             output = output
         )
 
         val provenance = Provenance(
-            capabilityId = capability.manifest.id,
-            capabilityVersion = capability.manifest.version,
-            activityIds = capability.manifest.activities.map { it.id },
+            methodId = method.manifest.id,
+            methodVersion = method.manifest.version,
+            activityIds = method.manifest.activities.map { it.id },
             transport = request.transport,
             warnings = contextWarnings + validation.messages
         )
 
-        return CapabilityExecutionResult(
+        return MethodExecutionResult(
             success = validation.valid,
             artifact = EvidenceArtifact(
                 output = output,
-                schema = capability.outputSchema,
+                schema = method.outputSchema,
                 context = request.context,
                 provenance = provenance,
                 validation = validation

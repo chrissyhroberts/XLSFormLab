@@ -1,10 +1,10 @@
 package com.example.xlsformlab.core
 
 /**
- * Compatibility result used by existing capability implementations.
- * Prefer EvidenceArtifact via CapabilityRuntime for new runtime code.
+ * Compatibility result used by existing method implementations.
+ * Prefer EvidenceArtifact via MethodRuntime for new runtime code.
  */
-data class CapabilityResult(
+data class MethodResult(
     val success: Boolean = true,
     val fields: Map<String, String> = emptyMap(),
     val json: String? = null,

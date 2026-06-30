@@ -12,18 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 
 @Composable
 fun SettingsRenderer(
-    settings: List<CapabilitySetting>,
+    settings: List<MethodSetting>,
     settingsState: SettingsState
 ) {
     Column {
         settings.forEach { setting ->
             when (setting) {
-                is CapabilitySetting.TextSetting -> {
+                is MethodSetting.TextSetting -> {
                     OutlinedTextField(
                         value = settingsState.getString(setting.id),
                         onValueChange = { settingsState.setString(setting.id, it) },
@@ -34,7 +34,7 @@ fun SettingsRenderer(
                     )
                 }
 
-                is CapabilitySetting.BooleanSetting -> {
+                is MethodSetting.BooleanSetting -> {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -54,7 +54,7 @@ fun SettingsRenderer(
                     }
                 }
 
-                is CapabilitySetting.FloatSetting -> {
+                is MethodSetting.FloatSetting -> {
                     NumericSettingField(
                         label = setting.label,
                         value = settingsState.getFloat(setting.id),
@@ -69,7 +69,7 @@ fun SettingsRenderer(
                     )
                 }
 
-                is CapabilitySetting.IntSetting -> {
+                is MethodSetting.IntSetting -> {
                     NumericSettingField(
                         label = setting.label,
                         value = settingsState.getInt(setting.id).toFloat(),
@@ -84,7 +84,7 @@ fun SettingsRenderer(
                     )
                 }
 
-                is CapabilitySetting.ChoiceSetting -> {
+                is MethodSetting.ChoiceSetting -> {
                     Text(
                         text = "${setting.label}: ${settingsState.getString(setting.id)}",
                         modifier = Modifier.padding(top = 8.dp)

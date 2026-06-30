@@ -40,19 +40,19 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.xlsformlab.core.Capability
-import com.example.xlsformlab.core.CapabilityCategory
-import com.example.xlsformlab.core.CapabilityField
-import com.example.xlsformlab.core.CapabilityFieldType
-import com.example.xlsformlab.core.CapabilityManifest
-import com.example.xlsformlab.core.CapabilityOutput
-import com.example.xlsformlab.core.CapabilityOutputSchema
-import com.example.xlsformlab.core.CapabilityRequest
-import com.example.xlsformlab.core.CapabilityResult
-import com.example.xlsformlab.core.CapabilityStatus
+import com.example.xlsformlab.core.Method
+import com.example.xlsformlab.core.MethodCategory
+import com.example.xlsformlab.core.MethodField
+import com.example.xlsformlab.core.MethodFieldType
+import com.example.xlsformlab.core.MethodManifest
+import com.example.xlsformlab.core.MethodOutput
+import com.example.xlsformlab.core.MethodOutputSchema
+import com.example.xlsformlab.core.MethodRequest
+import com.example.xlsformlab.core.MethodResult
+import com.example.xlsformlab.core.MethodStatus
 import com.example.xlsformlab.core.ResearchActivity
 import com.example.xlsformlab.core.ResearchActivityKind
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.platform.sensors.PhoneSensorRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -63,15 +63,15 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlin.math.roundToInt
 
-class GpsTargetNavigatorCapability : Capability {
+class GpsTargetNavigatorMethod : Method {
 
-    override val manifest = CapabilityManifest(
+    override val manifest = MethodManifest(
         id = "gps_target_navigator",
         name = "GPS Target Navigator",
         description = "Guide the user towards a target GPS coordinate and return distance, bearing and arrival status.",
         version = "0.2.0",
-        category = CapabilityCategory.Mapping,
-        status = CapabilityStatus.Experimental,
+        category = MethodCategory.Mapping,
+        status = MethodStatus.Experimental,
         activities = listOf(
             ResearchActivity(
                 id = "gps_target_navigator.localise",
@@ -85,13 +85,13 @@ class GpsTargetNavigatorCapability : Capability {
     )
 
     override val settings = listOf(
-        CapabilitySetting.TextSetting(
+        MethodSetting.TextSetting(
             id = "target_name",
             label = "Target name",
             group = "Target",
             defaultValue = "Target location"
         ),
-        CapabilitySetting.FloatSetting(
+        MethodSetting.FloatSetting(
             id = "target_latitude",
             label = "Target latitude",
             group = "Target",
@@ -101,7 +101,7 @@ class GpsTargetNavigatorCapability : Capability {
             step = 0.0001f,
             decimals = 6
         ),
-        CapabilitySetting.FloatSetting(
+        MethodSetting.FloatSetting(
             id = "target_longitude",
             label = "Target longitude",
             group = "Target",
@@ -111,7 +111,7 @@ class GpsTargetNavigatorCapability : Capability {
             step = 0.0001f,
             decimals = 6
         ),
-        CapabilitySetting.FloatSetting(
+        MethodSetting.FloatSetting(
             id = "arrival_radius_m",
             label = "Arrival radius",
             group = "Target",
@@ -122,19 +122,19 @@ class GpsTargetNavigatorCapability : Capability {
             unit = "m",
             decimals = 0
         ),
-        CapabilitySetting.BooleanSetting(
+        MethodSetting.BooleanSetting(
             id = "show_current_location",
             label = "Show current location",
             group = "Display",
             defaultValue = true
         ),
-        CapabilitySetting.BooleanSetting(
+        MethodSetting.BooleanSetting(
             id = "show_bearing",
             label = "Show bearing",
             group = "Display",
             defaultValue = true
         ),
-        CapabilitySetting.BooleanSetting(
+        MethodSetting.BooleanSetting(
             id = "show_distance",
             label = "Show distance",
             group = "Display",
@@ -142,22 +142,22 @@ class GpsTargetNavigatorCapability : Capability {
         )
     )
 
-    override val outputSchema = CapabilityOutputSchema(
+    override val outputSchema = MethodOutputSchema(
         fields = listOf(
-            CapabilityField("target_name", "Target name", CapabilityFieldType.Text, required = false),
-            CapabilityField("target_latitude", "Target latitude", CapabilityFieldType.Float, required = true),
-            CapabilityField("target_longitude", "Target longitude", CapabilityFieldType.Float, required = true),
-            CapabilityField("current_latitude", "Current latitude", CapabilityFieldType.Float, required = false),
-            CapabilityField("current_longitude", "Current longitude", CapabilityFieldType.Float, required = false),
-            CapabilityField("accuracy_m", "Accuracy metres", CapabilityFieldType.Float, required = false),
-            CapabilityField("distance_m", "Distance metres", CapabilityFieldType.Float, required = false),
-            CapabilityField("bearing_deg", "Bearing degrees", CapabilityFieldType.Float, required = false),
-            CapabilityField("heading_deg", "Heading degrees", CapabilityFieldType.Float, required = false),
-            CapabilityField("relative_bearing_deg", "Relative bearing degrees", CapabilityFieldType.Float, required = false),
-            CapabilityField("arrived", "Arrived", CapabilityFieldType.Boolean, required = true),
-            CapabilityField("timestamp_ms", "Timestamp milliseconds", CapabilityFieldType.Text, required = false),
-            CapabilityField("update_count", "Location update count", CapabilityFieldType.Integer, required = false),
-            CapabilityField("status", "Status", CapabilityFieldType.Text, required = false)
+            MethodField("target_name", "Target name", MethodFieldType.Text, required = false),
+            MethodField("target_latitude", "Target latitude", MethodFieldType.Float, required = true),
+            MethodField("target_longitude", "Target longitude", MethodFieldType.Float, required = true),
+            MethodField("current_latitude", "Current latitude", MethodFieldType.Float, required = false),
+            MethodField("current_longitude", "Current longitude", MethodFieldType.Float, required = false),
+            MethodField("accuracy_m", "Accuracy metres", MethodFieldType.Float, required = false),
+            MethodField("distance_m", "Distance metres", MethodFieldType.Float, required = false),
+            MethodField("bearing_deg", "Bearing degrees", MethodFieldType.Float, required = false),
+            MethodField("heading_deg", "Heading degrees", MethodFieldType.Float, required = false),
+            MethodField("relative_bearing_deg", "Relative bearing degrees", MethodFieldType.Float, required = false),
+            MethodField("arrived", "Arrived", MethodFieldType.Boolean, required = true),
+            MethodField("timestamp_ms", "Timestamp milliseconds", MethodFieldType.Text, required = false),
+            MethodField("update_count", "Location update count", MethodFieldType.Integer, required = false),
+            MethodField("status", "Status", MethodFieldType.Text, required = false)
         )
     )
 
@@ -417,7 +417,7 @@ class GpsTargetNavigatorCapability : Capability {
 
     override fun buildOutput(
         settingsState: SettingsState
-    ): CapabilityOutput {
+    ): MethodOutput {
         val targetLatitude = settingsState.getFloat("target_latitude")
         val targetLongitude = settingsState.getFloat("target_longitude")
         val currentLatitude = settingsState.getFloat("current_latitude")
@@ -436,7 +436,7 @@ class GpsTargetNavigatorCapability : Capability {
             )
         }
 
-        return CapabilityOutput(
+        return MethodOutput(
             fields = mapOf(
                 "target_name" to settingsState.getString("target_name"),
                 "target_latitude" to targetLatitude,
@@ -460,15 +460,15 @@ class GpsTargetNavigatorCapability : Capability {
     override fun Help() {
         Text(
             "GPS Target Navigator guides the user towards a configured latitude and longitude. " +
-                "It uses high-accuracy fused location updates while the capability is visible. " +
+                "It uses high-accuracy fused location updates while the method is visible. " +
                 "Compass heading, AR overlay and map view can be added in later patches."
         )
     }
 
     override fun execute(
-        request: CapabilityRequest
-    ): CapabilityResult {
-        return CapabilityResult(success = true)
+        request: MethodRequest
+    ): MethodResult {
+        return MethodResult(success = true)
     }
 
     private fun updateNavigationState(

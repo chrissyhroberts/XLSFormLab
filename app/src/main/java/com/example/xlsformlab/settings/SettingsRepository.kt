@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val Context.capabilitySettingsDataStore by preferencesDataStore(
-    name = "capability_settings"
+private val Context.methodSettingsDataStore by preferencesDataStore(
+    name = "method_settings"
 )
 
 object SettingsRepository {
@@ -28,16 +28,16 @@ object SettingsRepository {
     }
 
     suspend fun load(
-        capabilityId: String,
-        settings: List<CapabilitySetting>
+        methodId: String,
+        settings: List<MethodSetting>
     ): Map<String, Any> {
         val context = appContext ?: return emptyMap()
 
         return withContext(Dispatchers.IO) {
-            val preferences = context.capabilitySettingsDataStore.data.first()
+            val preferences = context.methodSettingsDataStore.data.first()
 
             settings.mapNotNull { setting ->
-                val key = stringPreferencesKey(keyFor(capabilityId, setting.id))
+                val key = stringPreferencesKey(keyFor(methodId, setting.id))
                 val storedValue = preferences[key] ?: return@mapNotNull null
                 parseStoredValue(setting, storedValue)?.let { parsed ->
                     setting.id to parsed
@@ -47,17 +47,17 @@ object SettingsRepository {
     }
 
     fun save(
-        capabilityId: String,
+        methodId: String,
         settingId: String,
         value: Any
     ) {
         val context = appContext ?: return
-        val key = stringPreferencesKey(keyFor(capabilityId, settingId))
+        val key = stringPreferencesKey(keyFor(methodId, settingId))
         val storedValue = value.toString()
 
         scope.launch {
             withContext(Dispatchers.IO) {
-                context.capabilitySettingsDataStore.edit { preferences ->
+                context.methodSettingsDataStore.edit { preferences ->
                     preferences[key] = storedValue
                 }
             }
@@ -65,26 +65,26 @@ object SettingsRepository {
     }
 
     private fun keyFor(
-        capabilityId: String,
+        methodId: String,
         settingId: String
-    ): String = "$capabilityId.$settingId"
+    ): String = "$methodId.$settingId"
 
     private fun parseStoredValue(
-        setting: CapabilitySetting,
+        setting: MethodSetting,
         storedValue: String
     ): Any? {
         return when (setting) {
-            is CapabilitySetting.BooleanSetting -> storedValue.toBooleanStrictOrNull()
-            is CapabilitySetting.IntSetting -> storedValue.toIntOrNull()?.coerceIn(
+            is MethodSetting.BooleanSetting -> storedValue.toBooleanStrictOrNull()
+            is MethodSetting.IntSetting -> storedValue.toIntOrNull()?.coerceIn(
                 setting.minimum ?: Int.MIN_VALUE,
                 setting.maximum ?: Int.MAX_VALUE
             )
-            is CapabilitySetting.FloatSetting -> storedValue.toFloatOrNull()?.coerceIn(
+            is MethodSetting.FloatSetting -> storedValue.toFloatOrNull()?.coerceIn(
                 setting.minimum ?: -Float.MAX_VALUE,
                 setting.maximum ?: Float.MAX_VALUE
             )
-            is CapabilitySetting.TextSetting -> storedValue
-            is CapabilitySetting.ChoiceSetting -> {
+            is MethodSetting.TextSetting -> storedValue
+            is MethodSetting.ChoiceSetting -> {
                 if (storedValue in setting.choices) storedValue else setting.defaultValue
             }
         }

@@ -1,6 +1,6 @@
 package com.example.xlsformlab.core
 
-enum class CapabilityCategory {
+enum class MethodCategory {
     Measurement,
     Camera,
     DCE,
@@ -16,24 +16,24 @@ enum class CapabilityCategory {
     Utilities
 }
 
-enum class CapabilityStatus {
+enum class MethodStatus {
     Experimental,
     Beta,
     Stable,
     Deprecated
 }
 
-data class CapabilityManifest(
+data class MethodManifest(
     val id: String,
     val name: String,
     val description: String,
     val version: String,
-    val category: CapabilityCategory,
-    val status: CapabilityStatus = CapabilityStatus.Experimental,
+    val category: MethodCategory,
+    val status: MethodStatus = MethodStatus.Experimental,
 
     /**
-     * ResearchOS-facing declaration of what this capability does in research terms.
-     * A capability may implement one activity or a small bundle of tightly-related activities.
+     * ResearchOS-facing declaration of what this method does in research terms.
+     * A method may implement one activity or a small bundle of tightly-related activities.
      */
     val activities: List<ResearchActivity> = emptyList(),
 
@@ -44,7 +44,7 @@ data class CapabilityManifest(
     val requiredContext: List<String> = emptyList(),
 
     /**
-     * Android permissions or device affordances needed by the capability.
+     * Android permissions or device affordances needed by the method.
      * These are descriptive at SDK level; Android permission requests remain platform code.
      */
     val requiredDeviceFeatures: List<String> = emptyList(),

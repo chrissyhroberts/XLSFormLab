@@ -3,7 +3,7 @@ package com.example.xlsformlab.settings
 import androidx.compose.runtime.mutableStateMapOf
 
 class SettingsState(
-    settings: List<CapabilitySetting>,
+    settings: List<MethodSetting>,
     private val onValueChanged: (String, Any) -> Unit = { _, _ -> }
 ) {
     private val values = mutableStateMapOf<String, Any>()
@@ -62,12 +62,12 @@ class SettingsState(
     }
 }
 
-fun CapabilitySetting.defaultValue(): Any {
+fun MethodSetting.defaultValue(): Any {
     return when (this) {
-        is CapabilitySetting.BooleanSetting -> defaultValue
-        is CapabilitySetting.IntSetting -> defaultValue
-        is CapabilitySetting.FloatSetting -> defaultValue
-        is CapabilitySetting.TextSetting -> defaultValue
-        is CapabilitySetting.ChoiceSetting -> defaultValue
+        is MethodSetting.BooleanSetting -> defaultValue
+        is MethodSetting.IntSetting -> defaultValue
+        is MethodSetting.FloatSetting -> defaultValue
+        is MethodSetting.TextSetting -> defaultValue
+        is MethodSetting.ChoiceSetting -> defaultValue
     }
 }

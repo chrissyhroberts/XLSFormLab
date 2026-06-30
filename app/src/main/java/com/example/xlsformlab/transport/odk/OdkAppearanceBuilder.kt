@@ -1,6 +1,6 @@
 package com.example.xlsformlab.transport.odk
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.ReturnMode
 import com.example.xlsformlab.transport.encodeTransportValue
@@ -8,13 +8,13 @@ import com.example.xlsformlab.transport.encodeTransportValue
 object OdkAppearanceBuilder {
 
     fun build(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: ReturnMode
     ): String {
         val parts = mutableListOf<String>()
 
-        parts += "capability=${encodeTransportValue(capability.manifest.id)}"
+        parts += "method=${encodeTransportValue(method.manifest.id)}"
         parts += "return_mode=${encodeTransportValue(returnMode.id)}"
 
         settingsState.asMap()
@@ -23,6 +23,6 @@ object OdkAppearanceBuilder {
                 parts += "${encodeTransportValue(key)}=${encodeTransportValue(value)}"
             }
 
-        return "xlsformlab(${parts.joinToString(";")})"
+        return "researchos(${parts.joinToString(";")})"
     }
 }

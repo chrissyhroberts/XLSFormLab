@@ -1,11 +1,11 @@
 package com.example.xlsformlab.transport
 
-import com.example.xlsformlab.core.CapabilityOutput
+import com.example.xlsformlab.core.MethodOutput
 import com.example.xlsformlab.core.EvidenceArtifact
 
 object OutputFormatter {
 
-    fun format(output: CapabilityOutput, returnMode: ReturnMode): String =
+    fun format(output: MethodOutput, returnMode: ReturnMode): String =
         formatFields(output.fields, returnMode)
 
     fun format(artifact: EvidenceArtifact, returnMode: ReturnMode, includeProvenance: Boolean = true): String =

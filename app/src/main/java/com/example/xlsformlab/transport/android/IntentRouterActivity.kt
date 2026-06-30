@@ -3,11 +3,11 @@ package com.example.xlsformlab.transport.android
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import com.example.xlsformlab.core.CapabilityRegistry
-import com.example.xlsformlab.core.CapabilityRuntime
-import com.example.xlsformlab.core.CapabilityExecutionRequest
+import com.example.xlsformlab.core.MethodRegistry
+import com.example.xlsformlab.core.MethodRuntime
+import com.example.xlsformlab.core.MethodExecutionRequest
 import com.example.xlsformlab.core.ResearchContext
-import com.example.xlsformlab.settings.CapabilitySetting
+import com.example.xlsformlab.settings.MethodSetting
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.LaunchConfigParser
 import com.example.xlsformlab.transport.ReturnMode
@@ -17,7 +17,7 @@ import com.example.xlsformlab.transport.OutputFormatter
  * Minimal transport adapter for ODK/Android callers.
  *
  * This activity intentionally contains no research logic. It parses launch configuration, resolves
- * a capability, executes it through the runtime, serialises the output, and returns it to the caller.
+ * a method, executes it through the runtime, serialises the output, and returns it to the caller.
  */
 class IntentRouterActivity : Activity() {
 
@@ -31,25 +31,25 @@ class IntentRouterActivity : Activity() {
             ?.let { LaunchConfigParser.parse(it) }
             ?: parseExtras(intent)
 
-        val capabilityId = parsed.capabilityId
-        if (capabilityId == null) {
-            finishWithError("No capability id supplied.")
+        val methodId = parsed.methodId
+        if (methodId == null) {
+            finishWithError("No method id supplied.")
             return
         }
 
-        val capability = CapabilityRegistry.find(capabilityId)
-        if (capability == null) {
-            finishWithError("Unknown capability: $capabilityId")
+        val method = MethodRegistry.find(methodId)
+        if (method == null) {
+            finishWithError("Unknown method: $methodId")
             return
         }
 
-        val settingsState = SettingsState(capability.settings)
-        applyParameters(settingsState, capability.settings, parsed.settings)
+        val settingsState = SettingsState(method.settings)
+        applyParameters(settingsState, method.settings, parsed.settings)
 
-        val result = CapabilityRuntime.execute(
-            capability = capability,
-            request = CapabilityExecutionRequest(
-                capabilityId = capabilityId,
+        val result = MethodRuntime.execute(
+            method = method,
+            request = MethodExecutionRequest(
+                methodId = methodId,
                 context = ResearchContext(parsed.context),
                 parameters = parsed.settings,
                 transport = parsed.source ?: "android_intent"
@@ -58,7 +58,7 @@ class IntentRouterActivity : Activity() {
         )
 
         if (!result.success || result.artifact == null) {
-            finishWithError(result.errorMessage ?: "Capability execution failed.")
+            finishWithError(result.errorMessage ?: "Method execution failed.")
             return
         }
 
@@ -90,17 +90,17 @@ class IntentRouterActivity : Activity() {
 
     private fun applyParameters(
         settingsState: SettingsState,
-        settings: List<CapabilitySetting>,
+        settings: List<MethodSetting>,
         parameters: Map<String, String>
     ) {
         settings.forEach { setting ->
             val raw = parameters[setting.id] ?: return@forEach
             when (setting) {
-                is CapabilitySetting.BooleanSetting -> settingsState.setBoolean(setting.id, raw.toBooleanStrictOrNull() ?: raw == "1")
-                is CapabilitySetting.IntSetting -> raw.toIntOrNull()?.let { settingsState.setInt(setting.id, it) }
-                is CapabilitySetting.FloatSetting -> raw.toFloatOrNull()?.let { settingsState.setFloat(setting.id, it) }
-                is CapabilitySetting.TextSetting -> settingsState.setString(setting.id, raw)
-                is CapabilitySetting.ChoiceSetting -> settingsState.setString(setting.id, raw)
+                is MethodSetting.BooleanSetting -> settingsState.setBoolean(setting.id, raw.toBooleanStrictOrNull() ?: raw == "1")
+                is MethodSetting.IntSetting -> raw.toIntOrNull()?.let { settingsState.setInt(setting.id, it) }
+                is MethodSetting.FloatSetting -> raw.toFloatOrNull()?.let { settingsState.setFloat(setting.id, it) }
+                is MethodSetting.TextSetting -> settingsState.setString(setting.id, raw)
+                is MethodSetting.ChoiceSetting -> settingsState.setString(setting.id, raw)
             }
         }
     }

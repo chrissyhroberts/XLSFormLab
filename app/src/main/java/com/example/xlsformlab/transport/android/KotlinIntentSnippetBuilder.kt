@@ -1,16 +1,16 @@
 package com.example.xlsformlab.transport.android
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.ReturnMode
 
 object KotlinIntentSnippetBuilder {
 
-    private const val action = "com.example.xlsformlab.RUN_CAPABILITY"
+    private const val action = "com.example.xlsformlab.RUN_METHOD"
     private const val packageName = "com.example.xlsformlab"
 
     fun build(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: ReturnMode
     ): String {
@@ -18,7 +18,7 @@ object KotlinIntentSnippetBuilder {
 
         lines += "Intent(\"$action\")"
         lines += "    .setPackage(\"$packageName\")"
-        lines += "    .putExtra(\"capability_id\", \"${capability.manifest.id}\")"
+        lines += "    .putExtra(\"method_id\", \"${method.manifest.id}\")"
         lines += "    .putExtra(\"return_mode\", \"${returnMode.id}\")"
 
         settingsState.asMap()

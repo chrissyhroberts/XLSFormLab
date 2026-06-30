@@ -1,6 +1,6 @@
 package com.example.xlsformlab.transport.odk
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.ReturnMode
 import com.example.xlsformlab.transport.android.AndroidIntentUriBuilder
@@ -8,12 +8,12 @@ import com.example.xlsformlab.transport.android.AndroidIntentUriBuilder
 object OdkIntentColumnBuilder {
 
     fun build(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: ReturnMode
     ): String {
         return AndroidIntentUriBuilder.build(
-            capability = capability,
+            method = method,
             settingsState = settingsState,
             returnMode = returnMode
         )

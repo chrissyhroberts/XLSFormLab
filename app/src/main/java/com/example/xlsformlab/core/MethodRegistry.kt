@@ -8,23 +8,23 @@ import com.example.xlsformlab.core.as100.runtime.As100MethodRegistry
  * The canonical registry is now As100MethodRegistry. This object remains so the
  * existing UI and transport code can migrate gradually without breaking imports.
  */
-object CapabilityRegistry {
+object MethodRegistry {
 
-    fun all(): List<Capability> =
-        As100MethodRegistry.legacyCapabilities()
+    fun all(): List<Method> =
+        As100MethodRegistry.legacyMethods()
 
-    fun byCategory(category: CapabilityCategory): List<Capability> =
+    fun byCategory(category: MethodCategory): List<Method> =
         As100MethodRegistry.legacyByCategory(category)
 
-    fun find(id: String): Capability? =
+    fun find(id: String): Method? =
         As100MethodRegistry.legacyFind(id)
 
-    fun categoriesInUse(): List<CapabilityCategory> =
+    fun categoriesInUse(): List<MethodCategory> =
         As100MethodRegistry.legacyCategoriesInUse()
 
-    fun manifests(): List<CapabilityManifest> =
+    fun manifests(): List<MethodManifest> =
         As100MethodRegistry.legacyManifests()
 
-    fun require(id: String): Capability =
+    fun require(id: String): Method =
         As100MethodRegistry.legacyRequire(id)
 }

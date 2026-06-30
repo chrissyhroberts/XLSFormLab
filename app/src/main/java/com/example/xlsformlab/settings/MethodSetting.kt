@@ -1,6 +1,6 @@
 package com.example.xlsformlab.settings
 
-sealed class CapabilitySetting {
+sealed class MethodSetting {
 
     abstract val id: String
     abstract val label: String
@@ -13,7 +13,7 @@ sealed class CapabilitySetting {
         override val description: String? = null,
         override val group: String? = null,
         val defaultValue: Boolean
-    ) : CapabilitySetting()
+    ) : MethodSetting()
 
     data class IntSetting(
         override val id: String,
@@ -25,7 +25,7 @@ sealed class CapabilitySetting {
         val maximum: Int? = null,
         val step: Int = 1,
         val unit: String? = null
-    ) : CapabilitySetting()
+    ) : MethodSetting()
 
     data class FloatSetting(
         override val id: String,
@@ -38,7 +38,7 @@ sealed class CapabilitySetting {
         val step: Float = 1f,
         val unit: String? = null,
         val decimals: Int = 1
-    ) : CapabilitySetting()
+    ) : MethodSetting()
 
     data class TextSetting(
         override val id: String,
@@ -46,7 +46,7 @@ sealed class CapabilitySetting {
         override val description: String? = null,
         override val group: String? = null,
         val defaultValue: String
-    ) : CapabilitySetting()
+    ) : MethodSetting()
 
     data class ChoiceSetting(
         override val id: String,
@@ -55,5 +55,5 @@ sealed class CapabilitySetting {
         override val group: String? = null,
         val defaultValue: String,
         val choices: List<String>
-    ) : CapabilitySetting()
+    ) : MethodSetting()
 }

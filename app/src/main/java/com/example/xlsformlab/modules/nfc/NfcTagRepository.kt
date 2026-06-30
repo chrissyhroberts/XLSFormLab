@@ -32,7 +32,7 @@ import com.example.xlsformlab.core.research.QualityRecord
 import com.example.xlsformlab.core.research.ResearchLayer
 import com.example.xlsformlab.core.research.TemporalSemantics
 import com.example.xlsformlab.core.research.ValidationRecord
-import com.example.xlsformlab.core.research.CapabilityExecutionRecord
+import com.example.xlsformlab.core.research.MethodExecutionRecord
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
@@ -41,7 +41,7 @@ import java.util.UUID
 data class NfcReadEvidenceBundle(
     val evidence: EvidenceRecord,
     val artifact: ArtifactRecord,
-    val execution: CapabilityExecutionRecord,
+    val execution: MethodExecutionRecord,
     val signal: Signal,
     val as100Observation: Observation,
     val transformation: Transformation,
@@ -93,16 +93,16 @@ object NfcTagRepository {
 
     fun readTagSignal(
         tagSignal: NfcTagSignal,
-        capabilityId: String,
-        capabilityVersion: String,
+        methodId: String,
+        methodVersion: String,
         methodObjectType: String = "Method",
         methodLabel: String = "NFC Tag Read"
     ): NfcReadEvidenceBundle {
         val signal = tagSignal.signal
         val tag = tagSignal.androidTag
         val provenance = ProvenanceRecord(
-            capabilityId = capabilityId,
-            capabilityVersion = capabilityVersion,
+            methodId = methodId,
+            methodVersion = methodVersion,
             provider = signal.provenance.provider
         )
         val tagValues = extractTagValues(tag)
@@ -146,10 +146,10 @@ object NfcTagRepository {
             values = tagValues,
             provenance = provenance
         )
-        val execution = CapabilityExecutionRecord(
+        val execution = MethodExecutionRecord(
             id = provenance.executionId,
-            capabilityId = capabilityId,
-            capabilityVersion = capabilityVersion,
+            methodId = methodId,
+            methodVersion = methodVersion,
             layers = listOf(
                 ResearchLayer.Activity,
                 ResearchLayer.Session,
@@ -160,7 +160,7 @@ object NfcTagRepository {
             artifacts = listOf(artifact)
         )
         val methodRef = ArchitectureRef(
-            id = ArchitectureId(capabilityId),
+            id = ArchitectureId(methodId),
             type = methodObjectType,
             label = methodLabel
         )
@@ -182,8 +182,8 @@ object NfcTagRepository {
             ),
             provenance = ProvenanceContext(
                 provider = signal.provenance.provider,
-                methodId = capabilityId,
-                methodVersion = capabilityVersion,
+                methodId = methodId,
+                methodVersion = methodVersion,
                 extra = evidence.provenance.extra
             )
         )
@@ -228,17 +228,17 @@ object NfcTagRepository {
         )
     }
 
-    fun readTag(tag: Tag, capabilityId: String, capabilityVersion: String): NfcReadEvidenceBundle =
+    fun readTag(tag: Tag, methodId: String, methodVersion: String): NfcReadEvidenceBundle =
         readTagSignal(
             tagSignal = AndroidNfcDeviceService.tagSignalFromTag(tag),
-            capabilityId = capabilityId,
-            capabilityVersion = capabilityVersion
+            methodId = methodId,
+            methodVersion = methodVersion
         )
 
-    fun writeTag(tag: Tag, request: NfcWriteRequest, capabilityId: String, capabilityVersion: String): NfcWriteEvidenceBundle {
+    fun writeTag(tag: Tag, request: NfcWriteRequest, methodId: String, methodVersion: String): NfcWriteEvidenceBundle {
         val provenance = ProvenanceRecord(
-            capabilityId = capabilityId,
-            capabilityVersion = capabilityVersion,
+            methodId = methodId,
+            methodVersion = methodVersion,
             provider = "android.nfc"
         )
         val record = buildRecord(request)
@@ -267,11 +267,11 @@ object NfcTagRepository {
                 messages = if (writeResult.first) emptyList() else listOf(writeResult.second)
             )
         )
-        val readBack = readTag(tag, capabilityId, capabilityVersion)
+        val readBack = readTag(tag, methodId, methodVersion)
         val execution = readBack.execution.copy(
             id = provenance.executionId,
-            capabilityId = capabilityId,
-            capabilityVersion = capabilityVersion,
+            methodId = methodId,
+            methodVersion = methodVersion,
             interventions = listOf(intervention),
             diagnostics = mapOf(
                 NfcWriteFields.WRITE_SUCCESS to writeResult.first.toString(),
@@ -333,7 +333,7 @@ object NfcTagRepository {
 
     private fun writeNdefMessage(tag: Tag, message: NdefMessage, sizeBytes: Int): Pair<Boolean, String> {
         val ndef = Ndef.get(tag)
-        if (ndef == null) return false to "Tag does not expose NDEF technology. Formatting is a platform operation, not part of this capability."
+        if (ndef == null) return false to "Tag does not expose NDEF technology. Formatting is a platform operation, not part of this method."
         return try {
             ndef.connect()
             when {

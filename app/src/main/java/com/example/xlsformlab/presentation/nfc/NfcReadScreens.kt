@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.modules.nfc.NfcDeviceServiceEffect
 import com.example.xlsformlab.modules.nfc.NfcEvidenceFields
-import com.example.xlsformlab.modules.nfc.NfcReadMethod
+import com.example.xlsformlab.modules.nfc.As100NfcReadMethod
 import com.example.xlsformlab.modules.nfc.NfcReadEvidenceBundle
 import com.example.xlsformlab.modules.nfc.applyFieldFilter
 import com.example.xlsformlab.modules.nfc.parseFieldFilter
@@ -28,8 +28,8 @@ import com.example.xlsformlab.settings.SettingsState
 /**
  * Presentation-owned NFC read demo screen.
  *
- * This keeps Compose UI out of the capability implementation while preserving the legacy
- * Capability.Demo entry point during the migration to headless AS1.00 methods.
+ * This keeps Compose UI out of the method implementation while preserving the legacy
+ * Method.Demo entry point during the migration to headless AS1.00 methods.
  */
 @Composable
 fun NfcReadDemoScreen(settingsState: SettingsState) {
@@ -44,7 +44,7 @@ fun NfcReadDemoScreen(settingsState: SettingsState) {
         enabled = active,
         onStatus = { status = it },
         onSignal = { tagSignal ->
-            val read = NfcReadMethod.read(tagSignal)
+            val read = As100NfcReadMethod.read(tagSignal)
             bundle = read
             status = "Tag read: ${read.evidence.values[NfcEvidenceFields.TAG_UID_HEX].orEmpty()}"
             if (readOnce) active = false
@@ -85,6 +85,6 @@ fun NfcReadDemoScreen(settingsState: SettingsState) {
 fun NfcReadHelpScreen() {
     Column(Modifier.padding(16.dp)) {
         Text("NFC Tag Read", fontWeight = FontWeight.Bold)
-        Text("This capability produces an Observation and an immutable NFC tag Artifact. It reads the UID, Android tag technologies, NDEF support, NDEF write state, NDEF records, decoded text/URI/MIME/external records and raw payloads. It does not implement ODK, XLSForm appearances, or return-intent mechanics; those remain in the XLSForm Lab transport layer.")
+        Text("This method produces an Observation and an immutable NFC tag Artifact. It reads the UID, Android tag technologies, NDEF support, NDEF write state, NDEF records, decoded text/URI/MIME/external records and raw payloads. It does not implement ODK, XLSForm appearances, or return-intent mechanics; those remain in the ResearchOS transport layer.")
     }
 }

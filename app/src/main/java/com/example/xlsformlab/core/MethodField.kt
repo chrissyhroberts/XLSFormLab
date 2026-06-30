@@ -1,6 +1,6 @@
 package com.example.xlsformlab.core
 
-enum class CapabilityFieldType {
+enum class MethodFieldType {
     Text,
     Integer,
     Float,
@@ -8,10 +8,10 @@ enum class CapabilityFieldType {
     Json
 }
 
-data class CapabilityField(
+data class MethodField(
     val id: String,
     val label: String,
-    val type: CapabilityFieldType,
+    val type: MethodFieldType,
     val required: Boolean = true,
     val description: String? = null
 )

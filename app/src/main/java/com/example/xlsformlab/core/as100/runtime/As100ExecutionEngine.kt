@@ -1,6 +1,6 @@
 package com.example.xlsformlab.core.as100.runtime
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.core.as100.ArchitectureId
 import com.example.xlsformlab.core.as100.ArchitectureRef
 import com.example.xlsformlab.core.as100.Entity
@@ -18,13 +18,13 @@ import com.example.xlsformlab.settings.SettingsState
  * Canonical AS1.00 execution entry point.
  *
  * For now this engine has two safe responsibilities:
- * 1. Run legacy capabilities through the AS1.00 bridge.
+ * 1. Run legacy methods through the AS1.00 bridge.
  * 2. Assemble AS1.00-native results for code paths that already interpret
  *    signals directly, such as NFC tag reads.
  *
  * The important architectural rule is that callers should depend on this
  * engine rather than directly constructing runtime results or directly calling
- * the legacy CapabilityRuntime.
+ * the legacy MethodRuntime.
  */
 object As100ExecutionEngine {
 
@@ -49,26 +49,26 @@ object As100ExecutionEngine {
     )
 
     fun requestFor(
-        capability: Capability,
-        action: String = capability.manifest.id,
+        method: Method,
+        action: String = method.manifest.id,
         context: Map<String, String> = emptyMap(),
         signals: List<Signal> = emptyList(),
         inputs: List<ArchitectureRef> = emptyList()
-    ): ExecutionRequest = As100CapabilityRuntime.requestFor(
-        capability = capability,
+    ): ExecutionRequest = As100MethodRuntime.requestFor(
+        method = method,
         action = action,
         context = context,
         signals = signals,
         inputs = inputs
     )
 
-    fun executeCapability(
-        capability: Capability,
+    fun executeMethod(
+        method: Method,
         request: ExecutionRequest,
         settingsState: SettingsState? = null,
         transport: String? = null
-    ): ExecutionResult = As100CapabilityRuntime.execute(
-        capability = capability,
+    ): ExecutionResult = As100MethodRuntime.execute(
+        method = method,
         request = request,
         settingsState = settingsState,
         transport = transport

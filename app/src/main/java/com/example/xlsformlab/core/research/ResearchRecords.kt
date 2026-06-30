@@ -14,7 +14,7 @@ enum class ResearchLayer {
     Transport
 }
 
-enum class CapabilityFamily {
+enum class MethodFamily {
     Measurement,
     Interaction,
     Identification,
@@ -129,8 +129,8 @@ private fun MutableMap<String, String>.putPrefixedEntries(prefix: String, entrie
 }
 
 data class ProvenanceRecord(
-    val capabilityId: String,
-    val capabilityVersion: String,
+    val methodId: String,
+    val methodVersion: String,
     val observedAtEpochMs: Long = System.currentTimeMillis(),
     val deviceManufacturer: String = android.os.Build.MANUFACTURER.orEmpty(),
     val deviceModel: String = android.os.Build.MODEL.orEmpty(),
@@ -142,8 +142,8 @@ data class ProvenanceRecord(
     val extra: Map<String, String> = emptyMap()
 ) {
     fun asMap(): Map<String, String> = linkedMapOf<String, String>().apply {
-        put("capability_id", capabilityId)
-        put("capability_version", capabilityVersion)
+        put("method_id", methodId)
+        put("method_version", methodVersion)
         put("observed_at_epoch_ms", observedAtEpochMs.toString())
         put("device_manufacturer", deviceManufacturer)
         put("device_model", deviceModel)
@@ -288,10 +288,10 @@ data class InterventionRecord(
     fun toJson(): String = mapToJsonObject(asMap()).toString()
 }
 
-data class CapabilityExecutionRecord(
+data class MethodExecutionRecord(
     val id: String,
-    val capabilityId: String,
-    val capabilityVersion: String,
+    val methodId: String,
+    val methodVersion: String,
     val layers: List<ResearchLayer>,
     val evidence: List<EvidenceRecord> = emptyList(),
     val artifacts: List<ArtifactRecord> = emptyList(),
@@ -300,8 +300,8 @@ data class CapabilityExecutionRecord(
 ) {
     fun toJson(): String = JSONObject().apply {
         put("execution_id", id)
-        put("capability_id", capabilityId)
-        put("capability_version", capabilityVersion)
+        put("method_id", methodId)
+        put("method_version", methodVersion)
         put("layers", namesToJsonArray(layers.map { it.name }))
         put("evidence", recordsToJsonArray(evidence.map { it.asMap() }))
         put("artifacts", recordsToJsonArray(artifacts.map { it.asMap() }))

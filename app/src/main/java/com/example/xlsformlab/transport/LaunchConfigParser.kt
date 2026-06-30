@@ -1,6 +1,6 @@
 package com.example.xlsformlab.transport
 
-import com.example.xlsformlab.core.CapabilityExecutionRequest
+import com.example.xlsformlab.core.MethodExecutionRequest
 import com.example.xlsformlab.core.ResearchContext
 import java.net.URLDecoder
 
@@ -9,17 +9,17 @@ import java.net.URLDecoder
  * transport-neutral launch request.
  */
 data class ParsedLaunchConfig(
-    val capabilityId: String?,
+    val methodId: String?,
     val returnMode: ReturnMode?,
     val settings: Map<String, String>,
     val context: Map<String, String> = emptyMap(),
     val warnings: List<String> = emptyList(),
     val source: String? = null
 ) {
-    fun toExecutionRequest(): CapabilityExecutionRequest? =
-        capabilityId?.let { id ->
-            CapabilityExecutionRequest(
-                capabilityId = id,
+    fun toExecutionRequest(): MethodExecutionRequest? =
+        methodId?.let { id ->
+            MethodExecutionRequest(
+                methodId = id,
                 context = ResearchContext(context),
                 parameters = settings,
                 transport = source
@@ -33,7 +33,7 @@ object LaunchConfigParser {
         val trimmed = text.trim()
 
         return when {
-            trimmed.startsWith("xlsformlab(") && trimmed.endsWith(")") ->
+            (trimmed.startsWith("researchos(") || trimmed.startsWith("xlsformlab(")) && trimmed.endsWith(")") ->
                 parseAppearance(trimmed)
 
             trimmed.startsWith("intent:#Intent") ->
@@ -44,16 +44,17 @@ object LaunchConfigParser {
 
             else ->
                 ParsedLaunchConfig(
-                    capabilityId = null,
+                    methodId = null,
                     returnMode = null,
                     settings = emptyMap(),
-                    warnings = listOf("Input was not recognised as an XLSForm Lab appearance, query string, or Android intent URI.")
+                    warnings = listOf("Input was not recognised as a ResearchOS appearance, query string, or Android intent URI.")
                 )
         }
     }
 
     private fun parseAppearance(text: String): ParsedLaunchConfig {
         val inside = text
+            .removePrefix("researchos(")
             .removePrefix("xlsformlab(")
             .removeSuffix(")")
 
@@ -79,8 +80,8 @@ object LaunchConfigParser {
     }
 
     private fun buildConfig(values: Map<String, String>, source: String): ParsedLaunchConfig {
-        val capabilityId = values["capability"]
-            ?: values["capability_id"]
+        val methodId = values["method"]
+            ?: values["method_id"]
             ?: values["module"]
             ?: values["module_id"]
 
@@ -89,7 +90,7 @@ object LaunchConfigParser {
             ?: values["mode"]
 
         val reserved = setOf(
-            "capability", "capability_id", "module", "module_id",
+            "method", "method_id", "module", "module_id",
             "return_mode", "return", "mode"
         )
 
@@ -101,7 +102,7 @@ object LaunchConfigParser {
             .filterKeys { key -> key !in reserved && !key.startsWith("context_") }
 
         return ParsedLaunchConfig(
-            capabilityId = capabilityId,
+            methodId = methodId,
             returnMode = returnMode?.let { ReturnMode.fromId(it) },
             settings = settings,
             context = context,

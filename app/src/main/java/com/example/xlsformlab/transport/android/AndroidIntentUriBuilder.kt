@@ -1,6 +1,6 @@
 package com.example.xlsformlab.transport.android
 
-import com.example.xlsformlab.core.Capability
+import com.example.xlsformlab.core.Method
 import com.example.xlsformlab.settings.SettingsState
 import com.example.xlsformlab.transport.ReturnMode
 import com.example.xlsformlab.transport.androidExtraPrefix
@@ -8,11 +8,11 @@ import com.example.xlsformlab.transport.encodeTransportValue
 
 object AndroidIntentUriBuilder {
 
-    private const val action = "com.example.xlsformlab.RUN_CAPABILITY"
+    private const val action = "com.example.xlsformlab.RUN_METHOD"
     private const val packageName = "com.example.xlsformlab"
 
     fun build(
-        capability: Capability,
+        method: Method,
         settingsState: SettingsState,
         returnMode: ReturnMode
     ): String {
@@ -21,7 +21,7 @@ object AndroidIntentUriBuilder {
         parts += "intent:#Intent"
         parts += "action=$action"
         parts += "package=$packageName"
-        parts += "S.capability_id=${encodeTransportValue(capability.manifest.id)}"
+        parts += "S.method_id=${encodeTransportValue(method.manifest.id)}"
         parts += "S.return_mode=${encodeTransportValue(returnMode.id)}"
 
         settingsState.asMap()
