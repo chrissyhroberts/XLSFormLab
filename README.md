@@ -9,7 +9,7 @@ ResearchOS is an open platform for building reusable, device-independent researc
 This roadmap describes the planned direction of the platform rather than a fixed release schedule. Priorities may evolve as the architecture matures and new research use cases emerge.
 
 
-ResearchOS Roadmap
+## ResearchOS Roadmap
 
 ResearchOS is an open platform for building reusable, device-independent research methods. The project is guided by Architecture Standard 1.00 (AS1.00), which separates knowledge, execution, presentation and device interaction into independent architectural layers.
 
