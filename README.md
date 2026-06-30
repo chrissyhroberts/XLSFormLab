@@ -114,7 +114,7 @@ The goal is for most of the platform to be testable independently of Android.
 
 ResearchOS will grow through reusable domains rather than isolated application features.
 
-####Identification
+#### Identification
 
 * NFC
 * QR Codes
