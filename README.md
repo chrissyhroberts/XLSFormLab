@@ -1,6 +1,32 @@
 # ResearchOS Runtime
 
+## What is ResearchOS?
+
+ResearchOS is an open platform for building reusable digital research tools.
+Instead of creating a separate application for every research project, ResearchOS provides a library of reusable research methods that can be combined into new workflows. Each method performs a single well-defined task, such as reading an NFC tag, recording a GPS location, measuring an object using a calibrated visual scale, scanning a QR code or launching a data collection form.
+
+The aim is to make research software modular, reusable and independent of specific hardware, applications or study designs. The same method should be usable in many different contexts, whether it is supporting a clinical trial, field epidemiology, environmental monitoring, laboratory work or operational research.
+
+For example, ResearchOS can provide methods such as:
+
+* Read an NFC tag attached to a participant, sample or asset.
+* Write information to an NFC tag.
+* Record a GPS location with associated accuracy and metadata.
+* Navigate to a predefined field location.
+* Measure the height of a tree or building using a calibrated visual scale.
+* Scan QR codes or barcodes.
+* Capture and annotate photographs.
+* Measure environmental conditions such as light, sound or acceleration.
+* Track protocol completeness across multiple visits.
+* Launch the correct electronic data collection form for the next study activity.
+* Rather than being implemented as independent applications, these become reusable ResearchOS Methods that can be combined into larger workflows.
+
+ResearchOS is guided by Architecture Standard 1.00 (AS1.00), which separates knowledge, execution, presentation and device interaction into independent architectural layers. This allows methods to remain reusable while supporting different user interfaces, devices and future runtime environments.
+
 See `docs/Architecture.md` for the overall architecture vision.
+
+This roadmap describes the planned direction of the platform rather than a fixed release schedule. Priorities may evolve as the architecture matures and new research use cases emerge.
+
 
 ## Purpose
 
