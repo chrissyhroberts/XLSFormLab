@@ -1,8 +1,6 @@
-Here’s the consolidated roadmap.
+# ResearchOS Roadmap
 
-ResearchOS Roadmap
-
-What is ResearchOS?
+## What is ResearchOS?
 
 ResearchOS is an open platform for building reusable digital research methods and lightweight protocol workflows.
 
