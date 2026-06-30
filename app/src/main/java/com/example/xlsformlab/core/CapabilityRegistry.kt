@@ -3,13 +3,17 @@ package com.example.xlsformlab.core
 import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintCapability
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleCapability
 import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorCapability
+import com.example.xlsformlab.modules.nfc.NfcReadCapability
+import com.example.xlsformlab.modules.nfc.NfcWriteCapability
 
 object CapabilityRegistry {
 
     private val capabilities = listOf(
         CalibratedScaleCapability(),
         AdminFingerprintCapability(),
-        GpsTargetNavigatorCapability()
+        GpsTargetNavigatorCapability(),
+        NfcReadCapability(),
+        NfcWriteCapability()
     )
 
     fun all(): List<Capability> = capabilities

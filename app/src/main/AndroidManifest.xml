@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.NFC" />
+
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -16,17 +21,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.XLSFormLab">
-        <activity
-            android:name=".transport.android.IntentRouterActivity"
-            android:exported="true"
-            android:theme="@style/Theme.XLSFormLab">
-            <intent-filter>
-                <action android:name="com.example.xlsformlab.RUN_CAPABILITY" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="xlsformlab" />
-            </intent-filter>
-        </activity>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
