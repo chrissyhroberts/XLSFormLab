@@ -23,9 +23,9 @@ This roadmap describes the planned direction of the platform rather than a fixed
 
 ⸻
 
-##Current Status
+## Current Status
 
-###ResearchOS Runtime 1.x
+### ResearchOS Runtime 1.x
 
 The first implementation of the AS1.00 runtime is complete.
 
@@ -54,7 +54,7 @@ These demonstrate observation, intervention, measurement and sensor integration 
 
 The next phase focuses on making ResearchOS easier to develop, extend and maintain.
 
-####Documentation
+#### Documentation
 
 Planned documentation includes:
 
@@ -65,7 +65,7 @@ Planned documentation includes:
 * Presentation Framework
 * Testing Guide
 
-####Repository organisation
+#### Repository organisation
 
 The repository will gradually be reorganised into clear architectural domains including:
 
@@ -78,7 +78,7 @@ The repository will gradually be reorganised into clear architectural domains in
 * Examples
 * Tests
 
-####Testing
+#### Testing
 
 Expand automated testing with:
 
@@ -104,7 +104,7 @@ ResearchOS will grow through reusable domains rather than isolated application f
 * RFID
 * Identity verification
 
-####Location
+#### Location
 
 * GPS
 * Compass
@@ -112,7 +112,7 @@ ResearchOS will grow through reusable domains rather than isolated application f
 * Geofencing
 * Augmented reality positioning
 
-####Measurement
+#### Measurement
 
 * Calibrated visual scales
 * Distance estimation
@@ -122,7 +122,7 @@ ResearchOS will grow through reusable domains rather than isolated application f
 * Accelerometer-derived measurements
 * Environmental sensors
 
-####Imaging
+#### Imaging
 
 * Camera capture
 * Image annotation
@@ -130,7 +130,7 @@ ResearchOS will grow through reusable domains rather than isolated application f
 * Lesion mapping
 * Spatial image overlays
 
-####Workflow
+#### Workflow
 
 * Participant context
 * Protocol completeness
