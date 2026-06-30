@@ -7,7 +7,6 @@ import android.nfc.tech.Ndef
 import android.nfc.tech.TagTechnology
 import com.example.xlsformlab.core.as100.ArchitectureId
 import com.example.xlsformlab.core.as100.ArchitectureRef
-import com.example.xlsformlab.core.as100.ExecutionRequest
 import com.example.xlsformlab.core.as100.ExecutionResult
 import com.example.xlsformlab.core.as100.Observation
 import com.example.xlsformlab.core.as100.ProvenanceContext
@@ -15,6 +14,7 @@ import com.example.xlsformlab.core.as100.Signal
 import com.example.xlsformlab.core.as100.TemporalContext
 import com.example.xlsformlab.core.as100.Transformation
 import com.example.xlsformlab.core.as100.TransformationStatus
+import com.example.xlsformlab.core.as100.runtime.As100ExecutionEngine
 import com.example.xlsformlab.platform.nfc.AndroidNfcSignalAdapter
 import com.example.xlsformlab.core.research.AggregationSemantics
 import com.example.xlsformlab.core.research.ArtifactKind
@@ -195,14 +195,14 @@ object NfcTagRepository {
             temporalContext = observation.temporalContext,
             provenance = observation.provenance
         )
-        val executionRequest = ExecutionRequest(
+        val executionRequest = As100ExecutionEngine.request(
             id = ArchitectureId(provenance.executionId),
             action = "read.nfc.tag",
             method = methodRef,
             signals = listOf(signal),
             temporalContext = observation.temporalContext
         )
-        val executionResult = ExecutionResult(
+        val executionResult = As100ExecutionEngine.complete(
             request = executionRequest,
             status = transformation.status,
             observations = listOf(observation),
