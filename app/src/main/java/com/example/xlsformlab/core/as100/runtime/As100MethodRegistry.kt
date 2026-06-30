@@ -9,6 +9,7 @@ import com.example.xlsformlab.modules.adminfingerprint.AdminFingerprintCapabilit
 import com.example.xlsformlab.modules.calibratedscale.CalibratedScaleCapability
 import com.example.xlsformlab.modules.gpstargetnavigator.GpsTargetNavigatorCapability
 import com.example.xlsformlab.modules.nfc.NfcReadCapability
+import com.example.xlsformlab.modules.nfc.NfcReadMethod
 import com.example.xlsformlab.modules.nfc.NfcWriteCapability
 
 /**
@@ -32,7 +33,9 @@ object As100MethodRegistry {
     }
 
     private val methods: List<As100Method> by lazy {
-        legacyCapabilities.map { capability -> As100CapabilityMethod(capability) }
+        listOf(NfcReadMethod) + legacyCapabilities
+            .filterNot { capability -> capability.manifest.id == NfcReadMethod.ID }
+            .map { capability -> As100CapabilityMethod(capability) }
     }
 
     fun all(): List<As100Method> = methods

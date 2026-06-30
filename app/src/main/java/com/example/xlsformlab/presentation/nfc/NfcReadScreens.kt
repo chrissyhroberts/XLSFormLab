@@ -17,9 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.xlsformlab.modules.nfc.NfcDeviceServiceEffect
 import com.example.xlsformlab.modules.nfc.NfcEvidenceFields
-import com.example.xlsformlab.modules.nfc.NfcReadCapability
+import com.example.xlsformlab.modules.nfc.NfcReadMethod
 import com.example.xlsformlab.modules.nfc.NfcReadEvidenceBundle
-import com.example.xlsformlab.modules.nfc.NfcTagRepository
 import com.example.xlsformlab.modules.nfc.applyFieldFilter
 import com.example.xlsformlab.modules.nfc.parseFieldFilter
 import com.example.xlsformlab.modules.nfc.rememberNfcAvailabilityMessage
@@ -45,11 +44,7 @@ fun NfcReadDemoScreen(settingsState: SettingsState) {
         enabled = active,
         onStatus = { status = it },
         onSignal = { tagSignal ->
-            val read = NfcTagRepository.readTagSignal(
-                tagSignal = tagSignal,
-                capabilityId = NfcReadCapability.ID,
-                capabilityVersion = NfcReadCapability.VERSION
-            )
+            val read = NfcReadMethod.read(tagSignal)
             bundle = read
             status = "Tag read: ${read.evidence.values[NfcEvidenceFields.TAG_UID_HEX].orEmpty()}"
             if (readOnce) active = false

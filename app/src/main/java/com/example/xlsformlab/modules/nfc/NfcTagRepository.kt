@@ -91,7 +91,13 @@ data class NfcWriteEvidenceBundle(
 
 object NfcTagRepository {
 
-    fun readTagSignal(tagSignal: NfcTagSignal, capabilityId: String, capabilityVersion: String): NfcReadEvidenceBundle {
+    fun readTagSignal(
+        tagSignal: NfcTagSignal,
+        capabilityId: String,
+        capabilityVersion: String,
+        methodObjectType: String = "Method",
+        methodLabel: String = "NFC Tag Read"
+    ): NfcReadEvidenceBundle {
         val signal = tagSignal.signal
         val tag = tagSignal.androidTag
         val provenance = ProvenanceRecord(
@@ -155,8 +161,8 @@ object NfcTagRepository {
         )
         val methodRef = ArchitectureRef(
             id = ArchitectureId(capabilityId),
-            type = "Capability",
-            label = "NFC Tag Read"
+            type = methodObjectType,
+            label = methodLabel
         )
         val signalRef = ArchitectureRef(
             id = signal.id,

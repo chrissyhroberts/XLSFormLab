@@ -68,8 +68,8 @@ class NfcReadCapability : Capability {
     }
 
     companion object {
-        const val ID = "nfc_tag_read"
-        const val VERSION = "0.2.0"
+        const val ID = NfcReadMethod.ID
+        const val VERSION = NfcReadMethod.VERSION
     }
 }
 
