@@ -91,4 +91,19 @@ object As100ExecutionEngine {
         states = states,
         diagnostics = diagnostics
     )
+
+    fun methodFor(capabilityId: String): As100CapabilityMethod =
+        As100MethodRegistry.require(capabilityId)
+
+    fun executeMethod(
+        method: As100CapabilityMethod,
+        request: ExecutionRequest = method.request(),
+        settingsState: SettingsState? = null,
+        transport: String? = null
+    ): ExecutionResult = method.execute(
+        request = request,
+        settingsState = settingsState,
+        transport = transport
+    )
+
 }
