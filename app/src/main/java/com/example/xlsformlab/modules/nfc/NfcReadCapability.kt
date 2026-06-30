@@ -69,11 +69,11 @@ class NfcReadCapability : Capability {
         val readOnce = settingsState.getBoolean("read_once")
         val fieldFilter = parseFieldFilter(settingsState.getString("field_filter"))
 
-        NfcSessionEffect(
+        NfcDeviceServiceEffect(
             enabled = active,
             onStatus = { status = it },
-            onTag = { tag ->
-                val read = NfcTagRepository.readTag(tag, ID, VERSION)
+            onSignal = { tagSignal ->
+                val read = NfcTagRepository.readTagSignal(tagSignal, ID, VERSION)
                 bundle = read
                 status = "Tag read: ${read.evidence.values[NfcEvidenceFields.TAG_UID_HEX].orEmpty()}"
                 if (readOnce) active = false

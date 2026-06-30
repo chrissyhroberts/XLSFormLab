@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import com.example.xlsformlab.platform.nfc.AndroidNfcDeviceService
+import com.example.xlsformlab.platform.nfc.NfcTagSignal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +44,35 @@ class NfcReaderSession(
     }
 }
 
+
+class NfcDeviceServiceSession(
+    private val activity: Activity,
+    private val onSignal: (NfcTagSignal) -> Unit
+) : NfcAdapter.ReaderCallback {
+
+    private val adapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(activity)
+
+    fun start(): String {
+        val nfcAdapter = adapter ?: return "This device does not expose an NFC adapter."
+        if (!nfcAdapter.isEnabled) return "NFC is available but switched off."
+        val flags = NfcAdapter.FLAG_READER_NFC_A or
+            NfcAdapter.FLAG_READER_NFC_B or
+            NfcAdapter.FLAG_READER_NFC_F or
+            NfcAdapter.FLAG_READER_NFC_V or
+            NfcAdapter.FLAG_READER_NFC_BARCODE
+        nfcAdapter.enableReaderMode(activity, this, flags, null)
+        return "NFC device service active. Tap a tag."
+    }
+
+    fun stop() {
+        adapter?.disableReaderMode(activity)
+    }
+
+    override fun onTagDiscovered(tag: Tag) {
+        onSignal(AndroidNfcDeviceService.tagSignalFromTag(tag))
+    }
+}
+
 @Composable
 fun rememberNfcAvailabilityMessage(): String {
     val context = LocalContext.current
@@ -70,6 +101,34 @@ fun NfcSessionEffect(
     DisposableEffect(enabled, activity) {
         if (enabled && activity != null) {
             val created = NfcReaderSession(activity, onTag)
+            session = created
+            onStatus(created.start())
+        }
+        onDispose {
+            session?.stop()
+            session = null
+        }
+    }
+}
+
+
+@Composable
+fun NfcDeviceServiceEffect(
+    enabled: Boolean,
+    onStatus: (String) -> Unit,
+    onSignal: (NfcTagSignal) -> Unit
+) {
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+    var session by remember { mutableStateOf<NfcDeviceServiceSession?>(null) }
+
+    LaunchedEffect(enabled, activity) {
+        if (enabled && activity == null) onStatus("NFC device service requires an Activity context.")
+    }
+
+    DisposableEffect(enabled, activity) {
+        if (enabled && activity != null) {
+            val created = NfcDeviceServiceSession(activity, onSignal)
             session = created
             onStatus(created.start())
         }

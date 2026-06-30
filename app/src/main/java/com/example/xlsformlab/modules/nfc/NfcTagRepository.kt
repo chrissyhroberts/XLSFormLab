@@ -15,7 +15,8 @@ import com.example.xlsformlab.core.as100.TemporalContext
 import com.example.xlsformlab.core.as100.Transformation
 import com.example.xlsformlab.core.as100.TransformationStatus
 import com.example.xlsformlab.core.as100.runtime.As100ExecutionEngine
-import com.example.xlsformlab.platform.nfc.AndroidNfcSignalAdapter
+import com.example.xlsformlab.platform.nfc.AndroidNfcDeviceService
+import com.example.xlsformlab.platform.nfc.NfcTagSignal
 import com.example.xlsformlab.core.research.AggregationSemantics
 import com.example.xlsformlab.core.research.ArtifactKind
 import com.example.xlsformlab.core.research.ArtifactRecord
@@ -90,8 +91,9 @@ data class NfcWriteEvidenceBundle(
 
 object NfcTagRepository {
 
-    fun readTag(tag: Tag, capabilityId: String, capabilityVersion: String): NfcReadEvidenceBundle {
-        val signal = AndroidNfcSignalAdapter.fromTag(tag)
+    fun readTagSignal(tagSignal: NfcTagSignal, capabilityId: String, capabilityVersion: String): NfcReadEvidenceBundle {
+        val signal = tagSignal.signal
+        val tag = tagSignal.androidTag
         val provenance = ProvenanceRecord(
             capabilityId = capabilityId,
             capabilityVersion = capabilityVersion,
@@ -219,6 +221,13 @@ object NfcTagRepository {
             executionResult = executionResult
         )
     }
+
+    fun readTag(tag: Tag, capabilityId: String, capabilityVersion: String): NfcReadEvidenceBundle =
+        readTagSignal(
+            tagSignal = AndroidNfcDeviceService.tagSignalFromTag(tag),
+            capabilityId = capabilityId,
+            capabilityVersion = capabilityVersion
+        )
 
     fun writeTag(tag: Tag, request: NfcWriteRequest, capabilityId: String, capabilityVersion: String): NfcWriteEvidenceBundle {
         val provenance = ProvenanceRecord(
