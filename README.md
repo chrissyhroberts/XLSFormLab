@@ -1,4 +1,4 @@
-# XLSForm Lab
+# ResearchOS Runtime
 
 See `docs/Architecture.md` for the overall architecture vision.
 
