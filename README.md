@@ -1,8 +1,57 @@
+
 # ResearchOS
 
-ResearchOS is an open platform for building, executing and orchestrating digital research workflows.
+ResearchOS is an open, modular platform for building, executing and orchestrating digital research workflows.
 
-It provides a stable execution runtime for research methods together with a platform-independent language for interoperability. ResearchOS is designed to complement existing electronic data capture systems rather than replace them, allowing specialised research operations to be shared across projects and platforms.
+Rather than being another electronic data capture (EDC) system, ResearchOS provides reusable research capabilities that can be embedded within existing ecosystems such as ODK, KoBoToolbox, REDCap, custom web applications and future platforms.
+
+The project is built around a family of open specifications that separate architecture, execution, interoperability and protocol orchestration. This separation allows research methods to be implemented once and reused across studies, organisations and software platforms.
+
+---
+
+# Vision
+
+Research software is frequently rewritten for every study despite solving the same underlying problems: identifying participants, capturing observations, interacting with hardware, collecting measurements and maintaining provenance.
+
+ResearchOS aims to provide a common execution platform for these reusable operations.
+
+Applications remain responsible for study design, questionnaires and data management, while ResearchOS provides specialised research capabilities through a stable execution runtime and a platform-independent intent language.
+
+---
+
+# Architecture
+
+ResearchOS is organised into complementary layers.
+
+```text
+Research Protocol
+        │
+        ▼
+Protocol Definition Language (planned)
+        │
+        ▼
+ResearchOS Orchestrator (planned)
+        │
+        ▼
+ResearchOS Intent Language (RIL)
+        │
+        ▼
+Architecture Standard (AS1.00)
+        │
+        ▼
+Platform Runtime
+        │
+        ▼
+Android • iOS • Desktop • Server • Embedded
+```
+
+Each layer has a single responsibility.
+
+- **Architecture Standard (AS1.00)** defines the execution model.
+- **Runtime** implements that model.
+- **RIL** defines a platform-independent language for requesting research operations.
+- **Bindings** define how RIL is represented over different transports.
+- **The Orchestrator** executes protocols over time.
 
 ---
 
@@ -14,28 +63,27 @@ It provides a stable execution runtime for research methods together with a plat
 | Runtime 1.x | ✅ Implemented |
 | Native Methods | ✅ Initial implementation |
 | ResearchOS Intent Language (RIL v0.03) | ✅ Conceptually complete |
+| Core Verbs | ✅ Initial specification |
 | JSON Binding | 🚧 Planned |
 | Android Intent Binding | 🚧 Planned |
+| HTTP Binding | 🚧 Planned |
 | ResearchOS Orchestrator | 🚧 Planned |
 | Protocol Definition Language | 📋 Planned |
 
 ---
 
-# Current Status
+# Runtime 1.x
 
-## ResearchOS Runtime 1.x
-
-The first implementation of the **Architecture Standard v1.00 (AS1.00)** runtime is complete and provides the reference implementation of the ResearchOS execution model.
+The current implementation is the reference implementation of **Architecture Standard v1.00 (AS1.00)**.
 
 Implemented components include:
 
-- AS1.00 execution engine
+- Execution engine
 - Method registry
 - Device Service framework
 - Signal model
 - Presentation separation
-- ResearchOS project identity
-- Native ResearchOS Methods
+- Native ResearchOS methods
 
 Current native methods include:
 
@@ -44,101 +92,129 @@ Current native methods include:
 - Calibrated Scale
 - GPS / Locate Target
 
-These demonstrate observation, intervention, measurement and sensor integration through a common execution model.
+These demonstrate that observations, interventions, measurements and hardware integrations all execute through the same runtime model.
 
 ---
 
-## Phase 2 – ResearchOS Intent Language (RIL)
+# ResearchOS Intent Language (RIL)
 
-The conceptual design of **RIL v0.03** is complete.
+RIL is the interoperability layer of ResearchOS.
 
-RIL is a platform-independent language for requesting research operations. Every request is expressed using five independent concerns:
+Every request is expressed using five independent concerns:
 
-- **WHAT** – requested actions
-- **WHEN** – temporal behaviour
-- **WHERE** – spatial constraints
-- **HOW** – execution policies
-- **RESULT** – returned information
+- **WHAT** — requested actions
+- **WHEN** — temporal behaviour
+- **WHERE** — spatial constraints
+- **HOW** — execution policies
+- **RESULT** — returned information
 
-### Design Philosophy
+This separation allows the same request to execute consistently regardless of transport mechanism or operating system.
 
-ResearchOS separates **language** from **transport**.
+## Language, not API
 
-A RIL request has the same meaning regardless of whether it is transmitted using Android Intents, JSON, HTTP APIs, URLs, QR codes, NFC tags or future transport mechanisms.
+ResearchOS deliberately separates **language** from **transport**.
 
-Bindings define how requests are represented.
+A RIL request has the same meaning whether it is carried using:
+
+- Android Intents
+- JSON
+- HTTP APIs
+- URLs and deep links
+- QR codes
+- NFC tags
+- Web callbacks
+- Future transports
+
+Bindings describe how requests are represented.
 
 RIL defines what those requests mean.
 
 ---
 
-## Current Focus
+# Interoperability
 
-Development is now moving from language design to implementation.
+ResearchOS is designed to complement existing software rather than replace it.
 
-Current priorities are:
+External systems can request specialised operations while continuing to manage their own workflows and data models.
 
-- RIL JSON Binding v0.01
-- Android Intent Binding
-- HTTP Binding
-- Core Resources Specification
-- Core Types Specification
-- Core Policies Specification
-
-These specifications will provide concrete representations of RIL while preserving a single platform-independent language.
+ResearchOS internally maintains canonical methods, execution records and provenance, while callers remain free to map returned values into their own field names and schemas.
 
 ---
 
-## Phase 3 – ResearchOS Orchestrator
+# Roadmap
 
-The ResearchOS Orchestrator will execute research protocols by scheduling and issuing RIL requests over time.
+## Phase 1 — Runtime
+
+- Architecture Standard
+- Runtime implementation
+- Native methods
+- Device Services
+
+**Status:** Complete
+
+## Phase 2 — Interoperability
+
+- ResearchOS Intent Language
+- JSON binding
+- Android binding
+- HTTP binding
+- Core registries (Resources, Types, Policies)
+
+**Status:** RIL complete, bindings in progress
+
+## Phase 3 — Orchestration
+
+The ResearchOS Orchestrator will execute complete research protocols.
 
 Responsibilities include:
 
-- protocol scheduling
 - participant timelines
 - reminders and notifications
+- protocol scheduling
 - workflow progression
 - retries and missed windows
-- protocol branching
 - event-driven execution
+- protocol branching
 
-Example workflow:
+Typical workflow:
 
-1. A participant enrols by scanning a QR code.
-2. The QR code installs a personalised protocol.
-3. The Orchestrator schedules future activities.
-4. Notifications launch the appropriate application or web form.
-5. External systems request specialised operations using RIL.
-6. ResearchOS returns requested data together with configurable provenance.
-7. Participants and researchers can monitor protocol progress throughout the study.
-
----
-
-## Interoperability
-
-ResearchOS is designed as a companion platform for existing research ecosystems.
-
-Systems such as ODK, KoBoToolbox, web applications and future electronic data capture platforms can invoke ResearchOS through RIL while continuing to use their own data models.
-
-ResearchOS maintains canonical execution records, methods and provenance internally while allowing callers to define their own field names and output mappings.
+1. Participant enrols.
+2. Protocol is installed.
+3. Activities are scheduled.
+4. Notifications launch the appropriate application.
+5. External applications invoke ResearchOS through RIL.
+6. Results and provenance are returned.
+7. Progress is tracked throughout the study.
 
 ---
 
-## Specification Family
+# Specification Family
 
-The platform is defined by a family of complementary specifications:
+ResearchOS is defined by a family of open specifications.
+
+Current:
 
 - Architecture Standard (AS1.00)
 - ResearchOS Intent Language (RIL)
-- Core Verbs Specification
-- Core Resources Specification *(planned)*
-- Core Types Specification *(planned)*
-- Core Policies Specification *(planned)*
-- Protocol Definition Language *(planned)*
-- RIL JSON Binding *(planned)*
-- Android Intent Binding *(planned)*
-- HTTP Binding *(planned)*
-- ResearchOS Orchestrator Specification *(planned)*
+- Core Verbs
 
-Together these specifications define the ResearchOS platform independently of any specific programming language, operating system or transport mechanism.
+Planned:
+
+- Core Resources
+- Core Types
+- Core Policies
+- Protocol Definition Language
+- RIL JSON Binding
+- Android Intent Binding
+- HTTP Binding
+- ResearchOS Orchestrator Specification
+
+Together these specifications define the platform independently of any programming language, operating system or transport mechanism.
+
+---
+
+# Contributing
+
+ResearchOS is developed in the open.
+
+The project welcomes discussion around architecture, interoperability, reusable research methods and open standards for digital research.
